@@ -1,4 +1,4 @@
-// controller/PermissionController.js
+// controller/AuthenticationController.js
 const Authentication = require("../Models/AuthenticationModel");
 const EmailService = require("../middlewares/Services/Email/EmailService");
 
