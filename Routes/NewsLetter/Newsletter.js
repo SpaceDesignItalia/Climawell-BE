@@ -1,12 +1,12 @@
 // authenticationRoutes.js
 const express = require("express");
 const router = express.Router();
-const contactGET = require("./contactGET");
-const contactPOST = require("./contactPOST");
+const newsletterGET = require("./newsletterGET");
+const newsletterPOST = require("./newsletterPOST");
 
 const Contact = (db) => {
-  router.use("/GET", contactGET(db)); // Passa il database a stafferGET
-  router.use("/POST", contactPOST(db)); // Passa il database a stafferPOST
+  router.use("/GET", newsletterGET(db)); // Passa il database a stafferGET
+  router.use("/POST", newsletterPOST(db)); // Passa il database a stafferPOST
   return router;
 };
 
