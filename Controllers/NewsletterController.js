@@ -1,21 +1,30 @@
 // controller/PermissionController.js
 const NewsletterModel = require("../Models/NewsletterModel");
 
-class ContactController {
-  static async GetAllPrivate(res, db) {
+class NewsletterController {
+
+  static async GetAllEmail(res, db) {
     try {
-      const contacts = await NewsletterModel.GetAllPrivate(db);
-      res.status(200).json(contacts);
+      const newsletter = await NewsletterModel.GetAllEmail(db);
+      res.status(200).json(newsletter);
     } catch (error) {
       console.error("Errore nell'recuperare i clienti:", error);
     }
   }
 
-  static async GetAllCompany(res, db) {
+ 
+  static async PostEmail(req, res, db) {
     try {
-      const contacts = await NewsletterModel.GetAllCompany(db);
-      res.status(200).json(contacts);
+      const email = req.body.email;
+      const result = await NewsletterModel.PostEmail(db, email);
+      res.status(200).json({
+        message: "Iscritto con successo alla newsletter.",
+        subscriber: result.rows[0],
+      });
     } catch (error) {
-      console.error("Errore nell'recuperare i clienti:", error);
+      console.error("Errore durante l'iscrizione:", error);
+      res.status(500).json({ error: "Errore interno del server" });
     }
   }
+}
+module.exports = NewsletterController;
