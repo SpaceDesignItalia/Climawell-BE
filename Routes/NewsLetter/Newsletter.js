@@ -1,4 +1,4 @@
-// authenticationRoutes.js
+// newsletterRoutes.js
 const express = require("express");
 const router = express.Router();
 const newsletterGET = require("./newsletterGET");

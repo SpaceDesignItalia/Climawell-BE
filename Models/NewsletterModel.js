@@ -15,6 +15,7 @@ class NewsletterModel {
     }
 
     static async PostEmail(db, email) {
+      console.log("Valore ricevuto per email:", email);
       const query = `INSERT INTO public."Newsletter" ("NewsletterEmail") VALUES ($1) RETURNING *`;
       return db.query(query, [email]);
     }

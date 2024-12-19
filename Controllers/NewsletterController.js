@@ -16,6 +16,7 @@ class NewsletterController {
   static async PostEmail(req, res, db) {
     try {
       const email = req.body.email;
+      console.log("Email:", email);
       const result = await NewsletterModel.PostEmail(db, email);
       res.status(200).json({
         message: "Iscritto con successo alla newsletter.",

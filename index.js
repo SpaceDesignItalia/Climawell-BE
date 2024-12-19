@@ -13,6 +13,8 @@ require("dotenv").config();
 const createAuthenticationRoutes = require("./Routes/Authentication/Authentication");
 const createContactRoutes = require("./Routes/Contact/Contact");
 const createProductsRoutes = require("./Routes/Products/Products");
+const createNewsletterRoutes = require("./Routes/NewsLetter/Newsletter");
+
 
 const credentials = {
   key: fs.readFileSync("SSL/privateKey.key"),
@@ -66,6 +68,7 @@ const io = createSocketServer(server);
 app.use(PREFIX + "/Authentication", createAuthenticationRoutes(db));
 app.use(PREFIX + "/Products", createProductsRoutes(db));
 app.use(PREFIX + "/Contacts", createContactRoutes(db));
+app.use(PREFIX + "/Newsletter", createNewsletterRoutes(db));
 
 // Avvia il server HTTPS sulla porta 443
 (async () => {
