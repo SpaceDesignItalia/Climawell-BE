@@ -1,4 +1,78 @@
 class CampaignModel {
+  static GetAllEmailCampaigns(db) {
+    return new Promise((resolve, reject) => {
+      const query = `SELECT "EmailCampaignId", "Title", "Date" FROM public."EmailCampaign";`;
+      db.query(query, (error, result) => {
+        if (error) {
+          reject(error);
+        }
+        resolve(result.rows);
+      });
+    });
+  }
+
+  static GetAllWhatsappCampaigns(db) {
+    return new Promise((resolve, reject) => {
+      const query = `SELECT "WhatsappCampaignId", "Title", "Date" FROM public."WhatsappCampaign";`;
+      db.query(query, (error, result) => {
+        if (error) {
+          reject(error);
+        }
+        resolve(result.rows);
+      });
+    });
+  }
+
+  static GetNewEmailCampaignsThisMonth(db) {
+    return new Promise((resolve, reject) => {
+      const query = `SELECT "EmailCampaignId", "Title", "Date" FROM public."EmailCampaign" WHERE EXTRACT(MONTH FROM "Date") = EXTRACT(MONTH FROM CURRENT_DATE);`;
+      db.query(query, (error, result) => {
+        if (error) {
+          reject(error);
+        }
+        resolve(result.rows);
+      });
+    });
+  }
+
+  static GetNewWhatsappCampaignsThisMonth(db) {
+    return new Promise((resolve, reject) => {
+      const query = `SELECT "WhatsappCampaignId", "Title", "Date" FROM public."WhatsappCampaign" WHERE EXTRACT(MONTH FROM "Date") = EXTRACT(MONTH FROM CURRENT_DATE);`;
+      db.query(query, (error, result) => {
+        if (error) {
+          reject(error);
+        }
+        resolve(result.rows);
+      });
+    });
+  }
+
+  static SearchEmailCampaignByTitle(db, title) {
+    return new Promise((resolve, reject) => {
+      const query = `SELECT "EmailCampaignId", "Title", "Date" FROM public."EmailCampaign" WHERE "Title" ILIKE $1;`;
+      const values = [`%${title}%`];
+      db.query(query, values, (error, result) => {
+        if (error) {
+          reject(error);
+        }
+        resolve(result.rows);
+      });
+    });
+  }
+
+  static SearchWhatsappCampaignByTitle(db, title) {
+    return new Promise((resolve, reject) => {
+      const query = `SELECT "WhatsappCampaignId", "Title", "Date" FROM public."WhatsappCampaign" WHERE "Title" ILIKE $1;`;
+      const values = [`%${title}%`];
+      db.query(query, values, (error, result) => {
+        if (error) {
+          reject(error);
+        }
+        resolve(result.rows);
+      });
+    });
+  }
+
   static AddNewCampaign(
     db,
     campaignData,
@@ -114,6 +188,38 @@ class CampaignModel {
           });
         });
       }
+    });
+  }
+
+  static DeleteEmailCampaign(db, campaignId) {
+    return new Promise((resolve, reject) => {
+      const query = `DELETE FROM public."EmailCampaign" WHERE "EmailCampaignId" = $1;`;
+      const values = [campaignId];
+      db.query(query, values, (error, result) => {
+        if (error) {
+          reject(error);
+        }
+        resolve(result.rows);
+      });
+    });
+  }
+
+  static DeleteWhatsappCampaign(db, campaignId) {
+    return new Promise((resolve, reject) => {
+      const query = `DELETE FROM public."WhatsappCampaign" WHERE "WhatsappCampaignId" = $1;`;
+      const values = [campaignId];
+      db.query(query, values, (error, result) => {
+        if (error) {
+          reject(error);
+        }
+        const query = `DELETE FROM public."WhatsappCampaignImage" WHERE "WhatsappCampaignId" = $1;`;
+        db.query(query, values, (error, result) => {
+          if (error) {
+            reject(error);
+          }
+          resolve(result.rows);
+        });
+      });
     });
   }
 }
