@@ -14,6 +14,8 @@ const createAuthenticationRoutes = require("./Routes/Authentication/Authenticati
 const createContactRoutes = require("./Routes/Contact/Contact");
 const createProductsRoutes = require("./Routes/Products/Products");
 const createCampaignRoutes = require("./Routes/Campaign/Campaign");
+const createNewsletterRoutes = require("./Routes/NewsLetter/Newsletter");
+
 
 const credentials = {
   key: fs.readFileSync("SSL/privateKey.key"),
@@ -31,6 +33,8 @@ const db = require("./configs/Database");
 app.use(
   cors({
     origin: [
+      "http://localhost:3000",
+      "http://localhost:3001",
       "http://localhost:5173",
       "http://localhost:5174",
       "https://app.spacedesign-italia.it",
@@ -68,6 +72,7 @@ app.use(PREFIX + "/Authentication", createAuthenticationRoutes(db));
 app.use(PREFIX + "/Products", createProductsRoutes(db));
 app.use(PREFIX + "/Contacts", createContactRoutes(db));
 app.use(PREFIX + "/Campaigns", createCampaignRoutes(db));
+app.use(PREFIX + "/Newsletter", createNewsletterRoutes(db));
 
 // Avvia il server HTTPS sulla porta 443
 (async () => {

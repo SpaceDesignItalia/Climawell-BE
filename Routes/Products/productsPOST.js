@@ -4,7 +4,10 @@ const router = express.Router();
 const ProductsController = require("../../Controllers/ProductsController");
 
 const productsPOST = (db) => {
-  // Definisci le route POST qui
+  router.post("/AddProduct", async (req, res) => {
+    ProductsController.addProduct(req, res, db);
+  });
+
   return router; // Ritorna il router per consentire l'utilizzo da parte dell'app principale
 };
 
