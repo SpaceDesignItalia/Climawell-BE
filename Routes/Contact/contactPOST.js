@@ -38,6 +38,10 @@ const contactPOST = (db) => {
     }
   );
 
+  router.post("/UploadContacts", authenticateMiddleware, (req, res) => {
+    ContactController.UploadContacts(req, res, db);
+  });
+
   return router; // Ritorna il router per consentire l'utilizzo da parte dell'app principale
 };
 

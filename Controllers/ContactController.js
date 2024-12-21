@@ -26,11 +26,6 @@ class ContactController {
       const ContactType = req.body.ContactType;
       const PrivacyFile = req.file;
 
-      console.log(req.body);
-      console.log("Contact Data:", JSON.parse(ContactData));
-      console.log("Contact Type:", ContactType);
-      console.log("Privacy File:", PrivacyFile);
-
       // Verifica se PrivacyFile è definito, altrimenti passa null
       const privacyFileName = PrivacyFile ? PrivacyFile.filename : null;
 
@@ -56,6 +51,18 @@ class ContactController {
         // Altrimenti, restituisce un errore generico
         res.status(500).send("Aggiunta del cliente fallita.");
       }
+    }
+  }
+
+  static async UploadContacts(req, res, db) {
+    try {
+      const { companies, customers } = req.body;
+
+      await ContactModel.UploadContacts(db, companies, customers);
+      res.status(201).send("Clienti aggiunti con successo.");
+    } catch (error) {
+      console.error("Errore nell'aggiungere i clienti:", error);
+      res.status(500).send("Aggiunta dei clienti fallita.");
     }
   }
 }
