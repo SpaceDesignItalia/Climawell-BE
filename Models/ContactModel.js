@@ -109,5 +109,80 @@ class ContactModel {
       }
     });
   }
+
+  static UploadContacts(db, companies, customers) {
+    return new Promise((resolve, reject) => {
+      // Query per eliminare ed inserire le aziende
+      const deleteCompanyQuery = `DELETE FROM public."Company" WHERE "CompanyName" = $1;`;
+      const insertCompanyQuery = `INSERT INTO public."Company"(
+        "CompanyName", 
+        "CompanyEmail", 
+        "CompanyPhone", 
+        "CompanyVAT"
+      ) VALUES ($1, $2, $3, 'test');`;
+
+      companies.forEach((company) => {
+        const values = [
+          company.CompanyName,
+          company.CompanyEmail,
+          company.CompanyPhone,
+        ];
+
+        // Elimina prima la riga esistente con lo stesso CompanyName
+        db.query(deleteCompanyQuery, [company.CompanyName], (error, result) => {
+          if (error) {
+            return reject(error);
+          }
+
+          // Poi inserisci la nuova riga
+          db.query(insertCompanyQuery, values, (error, result) => {
+            if (error) {
+              return reject(error);
+            }
+          });
+        });
+      });
+
+      // Query per eliminare ed inserire i clienti
+      const deleteCustomerQuery = `DELETE FROM public."Customer" WHERE "CustomerName" = $1 AND "CustomerSurname" = $2;`;
+      const insertCustomerQuery = `INSERT INTO public."Customer"(
+        "CustomerName", 
+        "CustomerSurname", 
+        "CustomerEmail", 
+        "CustomerPhone", 
+        "PolicyAccepted", 
+        "PolicyDocumentUrl"
+      ) VALUES ($1, $2, $3, $4, true, 'test');`;
+
+      customers.forEach((customer) => {
+        const values = [
+          customer.CustomerName,
+          customer.CustomerSurname,
+          customer.CustomerEmail,
+          customer.CustomerPhone,
+        ];
+
+        // Elimina prima la riga esistente con lo stesso CustomerName e CustomerSurname
+        db.query(
+          deleteCustomerQuery,
+          [customer.CustomerName, customer.CustomerSurname],
+          (error, result) => {
+            if (error) {
+              return reject(error);
+            }
+
+            // Poi inserisci la nuova riga
+            db.query(insertCustomerQuery, values, (error, result) => {
+              if (error) {
+                return reject(error);
+              }
+            });
+          }
+        );
+      });
+
+      resolve();
+    });
+  }
 }
 module.exports = ContactModel;
