@@ -1,6 +1,7 @@
 const Products = require("../Models/ProductsModel");
 const path = require("path");
 const fs = require("fs");
+const { query } = require("express");
 
 class ProductsController {
   static async getAllProducts(req, res, db) {
@@ -126,6 +127,22 @@ class ProductsController {
       res.status(500).send("Ricerca del prodotto fallita");
     }
   }
+  static async searchCategoryByName(req, res, db) {
+    try {
+      const categories = await Products.searchCategoryByName(
+        req.query.searchQuery,
+        db
+      );
+      if (categories) {
+        res.status(200).json(categories);
+      } else {
+        res.status(500).send("Ricerca della categoria fallita");
+      }
+    } catch (error) {
+      console.error("Errore nella ricerca della categoria:", error);
+      res.status(500).send("Ricerca della categoria fallita");
+    }
+  }
   static async getImageByPath(req, res, db) {
     try {
       const imagePath = req.params.path;
@@ -174,6 +191,38 @@ class ProductsController {
       res.status(500).send("Aggiunta del prodotto fallita");
     }
   }
+  static async addCategory(req, res, db) {
+    try {
+      const category = req.body;
+      const newCategory = await Products.addCategory(category, db);
+      if (newCategory) {
+        res.status(200).json(newCategory);
+      } else {
+        res.status(500).send("Aggiunta della categoria fallita");
+      }
+    } catch (error) {
+      console.error("Errore nell'aggiunta della categoria:", error);
+      res.status(500).send("Aggiunta della categoria fallita");
+    }
+  }
+  static async uploadImage(req, res, db) {
+    try {
+      const productId = req.body.ProductId;
+      const files = req.files;
+
+      console.log("files", files);
+
+      const uploadedImages = await Products.uploadImage(productId, files, db);
+      if (uploadedImages) {
+        res.status(200).json(uploadedImages);
+      } else {
+        res.status(500).send("Caricamento delle immagini fallito");
+      }
+    } catch (error) {
+      console.error("Errore nel caricamento delle immagini:", error);
+      res.status(500).send("Caricamento delle immagini fallito");
+    }
+  }
   static async deleteProduct(req, res, db) {
     try {
       const productId = req.params.id;
@@ -200,6 +249,26 @@ class ProductsController {
     } catch (error) {
       console.error("Errore nell'eliminazione della categoria:", error);
       res.status(500).send("Eliminazione della categoria fallita");
+    }
+  }
+
+  static async updateCategory(req, res, db) {
+    try {
+      const categoryId = req.body.CategoryId.categoryId;
+      const categoryName = req.body.CategoryName;
+      const updatedCategory = await Products.updateCategory(
+        categoryId,
+        categoryName,
+        db
+      );
+      if (updatedCategory) {
+        res.status(200).json(updatedCategory);
+      } else {
+        res.status(500).send("Aggiornamento della categoria fallito");
+      }
+    } catch (error) {
+      console.error("Errore nell'aggiornamento della categoria:", error);
+      res.status(500).send("Aggiornamento della categoria fallito");
     }
   }
 }

@@ -4,7 +4,8 @@ class ProductsModel {
       const products = await db.query(
         `SELECT * FROM "Product"
          LEFT JOIN "Category" ON "Product"."CategoryId" = "Category"."CategoryId"
-         JOIN "Productimage" ON "Product"."ProductId" = "Productimage"."ProductId"`
+         JOIN "Productimage" ON "Product"."ProductId" = "Productimage"."ProductId"
+         LEFT JOIN "ModelGroup" ON "Product"."ProductModelGroupId" = "ModelGroup"."ProductModelId"`
       );
 
       const groupedProducts = products.rows.reduce((acc, row) => {
@@ -49,11 +50,13 @@ class ProductsModel {
   static async getFeaturedProducts(db) {
     try {
       const products = await db.query(
-        `SELECT * FROM "Product" 
-
-          JOIN "Category" ON "Product"."CategoryId" = "Category"."CategoryId"
-          JOIN "Productimage" ON "Product"."ProductId" = "Productimage"."ProductId"
-          JOIN "FeaturedProduct" ON "Product"."ProductId" = "FeaturedProduct"."idproduct"`
+        `SELECT * 
+          FROM "Product"
+            LEFT JOIN "Category" ON "Product"."CategoryId" = "Category"."CategoryId"
+            JOIN "Productimage" ON "Product"."ProductId" = "Productimage"."ProductId"
+            JOIN "FeaturedProduct" ON "Product"."ProductId" = "FeaturedProduct"."idproduct"
+            LEFT JOIN "ModelGroup" ON "Product"."ProductModelGroupId" = "ModelGroup"."ProductModelId";
+`
       );
 
       const groupedProducts = products.rows.reduce((acc, row) => {
@@ -89,8 +92,10 @@ class ProductsModel {
     try {
       const product = await db.query(
         `SELECT * FROM "Product"
-         JOIN "Category" ON "Product"."CategoryId" = "Category"."CategoryId"
+         LEFT JOIN "Category" ON "Product"."CategoryId" = "Category"."CategoryId"
          JOIN "Productimage" ON "Product"."ProductId" = "Productimage"."ProductId"
+         JOIN "FeaturedProduct" ON "Product"."ProductId" = "FeaturedProduct"."idproduct"
+         LEFT JOIN "ModelGroup" ON "Product"."ProductModelGroupId" = "ModelGroup"."ProductModelId"
          WHERE "Product"."ProductId" = $1`,
         [id]
       );
@@ -173,11 +178,20 @@ class ProductsModel {
     try {
       const products = await db.query(
         `SELECT * FROM "Product"
-         JOIN "Category" ON "Product"."CategoryId" = "Category"."CategoryId"
-         JOIN "Productimage" ON "Product"."ProductId" = "Productimage"."ProductId"
+         LEFT JOIN "Category" ON "Product"."CategoryId" = "Category"."CategoryId"
+         JOIN "FeaturedProduct" ON "Product"."ProductId" = "FeaturedProduct"."idproduct"
+         LEFT JOIN "ModelGroup" ON "Product"."ProductModelGroupId" = "ModelGroup"."ProductModelId"
          WHERE "Product"."ProductName" ILIKE $1`,
         [`%${searchQuery}%`]
       );
+
+      for (let product of products.rows) {
+        const isFeatured = await ProductsModel.isFeatured(
+          product.ProductId,
+          db
+        );
+        product.IsFeatured = isFeatured;
+      }
 
       return products.rows;
     } catch (error) {
@@ -186,35 +200,138 @@ class ProductsModel {
     }
   }
 
-  static async addProduct(productData, db) {
-    const {
-      ProductName,
-      ProductDescription,
-      ProductPrice,
-      ProductStock,
-      CategoryId,
-    } = productData;
-
+  static async searchCategoryByName(searchQuery, db) {
     try {
+      const categories = await db.query(
+        `SELECT * FROM "Category" WHERE "CategoryName" ILIKE $1`,
+        [`%${searchQuery}%`]
+      );
+
+      return categories.rows;
+    } catch (error) {
+      console.error("Errore nella ricerca della categoria:", error);
+      return null;
+    }
+  }
+
+  static async addProduct(product, files, db) {
+    try {
+      const {
+        ProductName,
+        ProductDescription,
+        ProductAmount,
+        UnitPrice,
+        Height,
+        Width,
+        Depth,
+        Weight,
+        CategoryId,
+        ProductModelGroupId,
+      } = product;
+
+      // Inserimento del prodotto nel database
       const newProduct = await db.query(
-        `INSERT INTO "Product" ("ProductName", "ProductDescription", "ProductPrice", "ProductStock", "CategoryId")
-         VALUES ($1, $2, $3, $4, $5)
-         RETURNING *`,
+        `INSERT INTO "Product" (
+          "ProductName",
+          "ProductDescription",
+          "ProductAmount",
+          "UnitPrice",
+          "Height",
+          "Width",
+          "Depth",
+          "Weight",
+          "CategoryId",
+          "ProductModelGroupId"
+        )
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+         RETURNING "ProductId"`,
         [
           ProductName,
           ProductDescription,
-          ProductPrice,
-          ProductStock,
+          ProductAmount,
+          UnitPrice,
+          Height,
+          Width,
+          Depth,
+          Weight,
           CategoryId,
+          ProductModelGroupId,
         ]
       );
 
-      return newProduct.rows[0];
+      const productId = newProduct.rows[0].ProductId;
+
+      // Percorso base per salvare le immagini
+      const uploadDir = path.join(__dirname, "../public/uploads");
+
+      // Creazione della directory se non esiste
+      if (!fs.existsSync(uploadDir)) {
+        fs.mkdirSync(uploadDir, { recursive: true });
+      }
+
+      // Salvataggio delle immagini e inserimento nel database
+      const imagePromises = files.map(async (file) => {
+        const fileName = `${Date.now()}-${file.originalname}`;
+        const filePath = path.join(uploadDir, fileName);
+
+        // Sposta il file nella directory di upload
+        fs.writeFileSync(filePath, file.buffer);
+
+        // Salva il percorso nel database
+        await db.query(
+          `INSERT INTO "Productimage" ("ProductId", "ProductImageUrl")
+           VALUES ($1, $2)`,
+          [productId, `/uploads/${fileName}`]
+        );
+      });
+
+      // Attendi il completamento di tutte le promesse
+      await Promise.all(imagePromises);
+
+      return productId;
     } catch (error) {
       console.error("Errore nell'aggiunta del prodotto:", error);
       return null;
     }
   }
+  static async addCategory(category, db) {
+    try {
+      const { CategoryName } = category;
+
+      const newCategory = await db.query(
+        `INSERT INTO "Category" ("CategoryName") VALUES ($1) RETURNING "CategoryId"`,
+        [CategoryName]
+      );
+
+      return newCategory.rows[0].CategoryId;
+    } catch (error) {
+      console.error("Errore nell'aggiunta della categoria:", error);
+      return null;
+    }
+  }
+
+  static async uploadImage(productId, file, db) {
+    try {
+      const fileName = `${Date.now()}-${file.originalname}`;
+      const filePath = path.join(__dirname, "../public/uploads", fileName);
+
+      // Sposta il file nella directory di upload
+      fs.writeFileSync(filePath, file.buffer);
+
+      // Salva il percorso nel database
+      await db.query(
+        `INSERT INTO "Productimage" ("ProductId", "ProductImageUrl")
+         VALUES ($1, $2)`,
+        [productId, `/uploads/${fileName}`]
+      );
+
+      return true;
+    } catch (error) {
+      console.error("Errore nel caricamento dell'immagine:", error);
+      return false;
+    }
+  }
+
   static async deleteProduct(id, db) {
     try {
       await db.query(`DELETE FROM "Product" WHERE "ProductId" = $1`, [id]);
@@ -233,6 +350,20 @@ class ProductsModel {
       return true;
     } catch (error) {
       console.error("Errore nell'eliminazione della categoria:", error);
+      return false;
+    }
+  }
+
+  static async updateCategory(categoryId, categoryName, db) {
+    try {
+      await db.query(
+        `UPDATE "Category" SET "CategoryName" = $1 WHERE "CategoryId" = $2`,
+        [categoryName, categoryId]
+      );
+
+      return true;
+    } catch (error) {
+      console.error("Errore nell'aggiornamento della categoria:", error);
       return false;
     }
   }

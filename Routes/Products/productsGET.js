@@ -32,6 +32,9 @@ const productsGET = (db) => {
   router.get("/SearchProductByName", (req, res) => {
     ProductsController.searchProductByName(req, res, db);
   });
+  router.get("/SearchCategoryByName", (req, res) => {
+    ProductsController.searchCategoryByName(req, res, db);
+  });
   router.get("/GetImageByPath/:path", (req, res) => {
     ProductsController.getImageByPath(req, res, db);
   });

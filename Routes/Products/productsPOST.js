@@ -8,7 +8,15 @@ const productsPOST = (db) => {
     ProductsController.addProduct(req, res, db);
   });
 
-  return router; // Ritorna il router per consentire l'utilizzo da parte dell'app principale
+  router.post("/AddCategory", async (req, res) => {
+    ProductsController.addCategory(req, res, db);
+  });
+
+  router.post("/UploadImage", async (req, res) => {
+    ProductsController.uploadImage(req, res, db);
+  });
+
+  return router;
 };
 
 module.exports = productsPOST;
