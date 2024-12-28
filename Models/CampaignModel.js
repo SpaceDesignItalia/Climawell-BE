@@ -1,3 +1,5 @@
+const EmailService = require("../middlewares/EmailService/EmailService");
+
 class CampaignModel {
   static GetAllEmailCampaigns(db) {
     return new Promise((resolve, reject) => {
@@ -97,6 +99,22 @@ class CampaignModel {
         db.query(query, values, (error, result) => {
           if (error) {
             reject(error);
+          }
+
+          if (contactType === "private") {
+            EmailService.startPrivateCampaign(
+              campaignData.Description,
+              campaignData.Title,
+              campaignData.Object,
+              db
+            );
+          } else {
+            EmailService.startCompanyCampaign(
+              campaignData.Description,
+              campaignData.Title,
+              campaignData.Object,
+              db
+            );
           }
           resolve(result.rows);
         });

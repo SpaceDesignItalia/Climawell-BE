@@ -39,6 +39,7 @@ class ContactModel {
           }
 
           const emailExists = parseInt(result.rows[0].count) > 0;
+
           if (emailExists) {
             return reject(new Error("Esiste già un cliente con questa email."));
           }
