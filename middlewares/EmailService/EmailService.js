@@ -23,9 +23,7 @@ class EmailService {
   static async startPrivateCampaign(description, title, object, db) {
     try {
       const contacts = await ContactModel.GetAllPrivate(db);
-      console.log(contacts);
       if (!contacts || contacts.length === 0) {
-        console.log("No contacts found for the private campaign.");
         return;
       }
 
@@ -47,7 +45,7 @@ class EmailService {
           .replace(
             "${link}",
             process.env.FRONTEND_URL +
-              "contacts/remove-private/" +
+              "/contacts/remove-private/" +
               contact.CustomerEmail
           );
 
@@ -63,7 +61,6 @@ class EmailService {
           if (error) {
             console.error(`Failed to send email to ${email}: ${error.message}`);
           } else {
-            console.log(`Email sent to ${email}: ${info.response}`);
           }
         });
       };
@@ -85,9 +82,7 @@ class EmailService {
   static async startCompanyCampaign(description, title, object, db) {
     try {
       const companies = await ContactModel.GetAllCompany(db);
-      console.log(companies);
       if (!companies || companies.length === 0) {
-        console.log("No companies found for the company campaign.");
         return;
       }
 
@@ -107,7 +102,7 @@ class EmailService {
           .replace(
             "${link}",
             process.env.FRONTEND_URL +
-              "contacts/remove-company/" +
+              "/contacts/remove-company/" +
               company.CompanyEmail
           );
 
@@ -123,7 +118,6 @@ class EmailService {
           if (error) {
             console.error(`Failed to send email to ${email}: ${error.message}`);
           } else {
-            console.log(`Email sent to ${email}: ${info.response}`);
           }
         });
       };
