@@ -16,7 +16,6 @@ const createProductsRoutes = require("./Routes/Products/Products");
 const createCampaignRoutes = require("./Routes/Campaign/Campaign");
 const createNewsletterRoutes = require("./Routes/NewsLetter/Newsletter");
 
-
 const credentials = {
   key: fs.readFileSync("SSL/privateKey.key"),
   cert: fs.readFileSync("SSL/SpaceDesignAurora.pem"),
