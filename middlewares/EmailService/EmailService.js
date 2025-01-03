@@ -20,7 +20,7 @@ const transporter = nodemailer.createTransport({
 });
 
 class EmailService {
-  static async startPrivateCampaign(description, title, object, db) {
+  static async startPrivateCampaign(description, title, object, imagePath, db) {
     try {
       const contacts = await ContactModel.GetAllPrivate(db);
       if (!contacts || contacts.length === 0) {
@@ -47,6 +47,10 @@ class EmailService {
             process.env.FRONTEND_URL +
               "/contacts/remove-private/" +
               contact.CustomerEmail
+          )
+          .replace(
+            "${image}",
+            process.env.BACKEND_URL + imagePath.replace("public", "")
           );
 
         const emailOptions = {
@@ -79,7 +83,7 @@ class EmailService {
     }
   }
 
-  static async startCompanyCampaign(description, title, object, db) {
+  static async startCompanyCampaign(description, title, object, imagePath, db) {
     try {
       const companies = await ContactModel.GetAllCompany(db);
       if (!companies || companies.length === 0) {
@@ -104,6 +108,10 @@ class EmailService {
             process.env.FRONTEND_URL +
               "/contacts/remove-company/" +
               company.CompanyEmail
+          )
+          .replace(
+            "${image}",
+            process.env.BACKEND_URL + imagePath.replace("public", "")
           );
 
         const emailOptions = {

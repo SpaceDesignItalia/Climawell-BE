@@ -107,6 +107,7 @@ class CampaignModel {
               campaignData.Description,
               campaignData.Title,
               campaignData.Object,
+              campaignImages[0].path,
               db
             );
           } else {
@@ -114,6 +115,7 @@ class CampaignModel {
               campaignData.Description,
               campaignData.Title,
               campaignData.Object,
+              campaignImages[0].path,
               db
             );
           }
