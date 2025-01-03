@@ -185,5 +185,31 @@ class ContactModel {
       resolve();
     });
   }
+
+  static DeletePrivateContact(db, CustomerEmail) {
+    return new Promise((resolve, reject) => {
+      const query = `DELETE FROM public."Customer" WHERE "CustomerEmail" = $1;`;
+
+      db.query(query, [CustomerEmail], (error, result) => {
+        if (error) {
+          return reject(error);
+        }
+        resolve(result);
+      });
+    });
+  }
+
+  static DeleteCompanyContact(db, CompanyEmail) {
+    return new Promise((resolve, reject) => {
+      const query = `DELETE FROM public."Company" WHERE "CompanyEmail" = $1;`;
+
+      db.query(query, [CompanyEmail], (error, result) => {
+        if (error) {
+          return reject(error);
+        }
+        resolve(result);
+      });
+    });
+  }
 }
 module.exports = ContactModel;

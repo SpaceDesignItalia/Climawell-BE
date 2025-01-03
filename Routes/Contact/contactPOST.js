@@ -42,6 +42,14 @@ const contactPOST = (db) => {
     ContactController.UploadContacts(req, res, db);
   });
 
+  router.post("/DeletePrivateContact", authenticateMiddleware, (req, res) => {
+    ContactController.DeletePrivateContact(req, res, db);
+  });
+
+  router.post("/DeleteCompanyContact", authenticateMiddleware, (req, res) => {
+    ContactController.DeleteCompanyContact(req, res, db);
+  });
+
   return router; // Ritorna il router per consentire l'utilizzo da parte dell'app principale
 };
 

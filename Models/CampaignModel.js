@@ -1,4 +1,5 @@
 const EmailService = require("../middlewares/EmailService/EmailService");
+const Messages = require("../middlewares/WhatsappBusiness/Messages");
 
 class CampaignModel {
   static GetAllEmailCampaigns(db) {
@@ -147,6 +148,14 @@ class CampaignModel {
 
           Promise.all(queries)
             .then((results) => {
+              if (contactType === "private") {
+                Messages.sendPrivateMessage(
+                  campaignData.Title,
+                  campaignData.Description,
+                  campaignImages[0].path,
+                  db
+                );
+              }
               resolve(results);
             })
             .catch((error) => {

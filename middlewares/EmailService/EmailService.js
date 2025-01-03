@@ -43,7 +43,13 @@ class EmailService {
         const htmlContent = emailTemplate
           .replace("${name}", name || "")
           .replace("${surname}", surname || "")
-          .replace("${description}", description);
+          .replace("${description}", description)
+          .replace(
+            "${link}",
+            process.env.FRONTEND_URL +
+              "contacts/remove-private/" +
+              contact.CustomerEmail
+          );
 
         const emailOptions = {
           from: `Climawell SRL <${mailData.mail}>`,
@@ -97,7 +103,13 @@ class EmailService {
 
         const htmlContent = emailTemplate
           .replace("${description}", description)
-          .replace("${name}", name || "");
+          .replace("${name}", name || "")
+          .replace(
+            "${link}",
+            process.env.FRONTEND_URL +
+              "contacts/remove-company/" +
+              company.CompanyEmail
+          );
 
         const emailOptions = {
           from: `Climawell SRL <${mailData.mail}>`,

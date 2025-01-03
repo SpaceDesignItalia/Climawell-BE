@@ -65,6 +65,28 @@ class ContactController {
       res.status(500).send("Aggiunta dei clienti fallita.");
     }
   }
+
+  static async DeletePrivateContact(req, res, db) {
+    try {
+      const { CustomerEmail } = req.body;
+      await ContactModel.DeletePrivateContact(db, CustomerEmail);
+      res.status(200).send("Cliente eliminato con successo.");
+    } catch (error) {
+      console.error("Errore nell'eliminare il cliente:", error);
+      res.status(500).send("Eliminazione del cliente fallita.");
+    }
+  }
+
+  static async DeleteCompanyContact(req, res, db) {
+    try {
+      const { CompanyEmail } = req.body;
+      await ContactModel.DeleteCompanyContact(db, CompanyEmail);
+      res.status(200).send("Azienda eliminata con successo.");
+    } catch (error) {
+      console.error("Errore nell'eliminare l'azienda:", error);
+      res.status(500).send("Eliminazione dell'azienda fallita.");
+    }
+  }
 }
 
 module.exports = ContactController;
