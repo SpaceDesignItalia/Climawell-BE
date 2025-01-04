@@ -1,17 +1,26 @@
+const fs = require("fs");
+const path = require("path");
+
 class ProductsModel {
   static getAllProducts(db) {
     return new Promise((resolve, reject) => {
       const query = `
-            SELECT 
-                p.*,
-                c.*,
-                CASE 
-                    WHEN fp."ProductId" IS NOT NULL THEN true 
-                    ELSE false 
-                END AS "isFeatured"
-            FROM "Product" p
-            LEFT JOIN "Category" c ON p."CategoryId" = c."CategoryId"
-            LEFT JOIN "FeaturedProduct" fp ON p."ProductId" = fp."ProductId"`;
+        SELECT 
+            p.*,
+            c.*,
+            CASE 
+                WHEN fp."ProductId" IS NOT NULL THEN true 
+                ELSE false 
+            END AS "isFeatured",
+            (SELECT pi."ProductImageUrl"
+             FROM "Productimage" pi
+             WHERE pi."ProductId" = p."ProductId"
+             ORDER BY pi."ProductImageId" ASC
+             LIMIT 1) AS "FirstImage"
+        FROM "Product" p
+        LEFT JOIN "Category" c ON p."CategoryId" = c."CategoryId"
+        LEFT JOIN "FeaturedProduct" fp ON p."ProductId" = fp."ProductId";
+      `;
 
       db.query(query, (error, result) => {
         if (error) {
@@ -173,29 +182,37 @@ class ProductsModel {
     }
   }
 
-  static async searchProductByName(searchQuery, db) {
-    try {
+  static searchProductByName(productName, db) {
+    return new Promise((resolve, reject) => {
       const query = `
-        SELECT * FROM "Product"
-        LEFT JOIN "Category" ON "Product"."CategoryId" = "Category"."CategoryId"
-        LEFT JOIN "ModelGroup" ON "Product"."ProductModelGroupId" = "ModelGroup"."ProductModelId"
-        WHERE "Product"."ProductName" ILIKE $1`;
-      const { rows: products } = await db.query(query, [`%${searchQuery}%`]);
+        SELECT 
+            p.*,
+            c.*,
+            CASE 
+                WHEN fp."ProductId" IS NOT NULL THEN true 
+                ELSE false 
+            END AS "isFeatured",
+            (SELECT pi."ProductImageUrl"
+             FROM "Productimage" pi
+             WHERE pi."ProductId" = p."ProductId"
+             ORDER BY pi."ProductImageId" ASC
+             LIMIT 1) AS "FirstImage"
+        FROM "Product" p
+        LEFT JOIN "Category" c ON p."CategoryId" = c."CategoryId"
+        LEFT JOIN "FeaturedProduct" fp ON p."ProductId" = fp."ProductId"
+        WHERE p."ProductName" ILIKE $1;
+      `;
 
-      // Aggiungere il flag IsFeatured a ogni prodotto
-      for (let product of products) {
-        const isFeatured = await ProductsModel.isFeatured(
-          product.ProductId,
-          db
-        );
-        product.IsFeatured = isFeatured;
-      }
+      const values = [`%${productName}%`]; // Per una ricerca parziale
 
-      return products;
-    } catch (error) {
-      console.error("Errore nella ricerca del prodotto:", error);
-      throw new Error("Impossibile completare la ricerca del prodotto");
-    }
+      db.query(query, values, (error, result) => {
+        if (error) {
+          reject(error);
+        } else {
+          resolve(result.rows);
+        }
+      });
+    });
   }
 
   static async searchCategoryByName(searchQuery, db) {
@@ -210,74 +227,115 @@ class ProductsModel {
   }
 
   static addProduct(product, files, db) {
-    return new Promise(async (resolve, reject) => {
-      try {
-        const {
-          ProductName,
-          ProductDescription,
-          ProductAmount,
-          UnitPrice,
-          Height,
-          Width,
-          Depth,
-          Weight,
-          CategoryId,
-          ProductModelGroupId,
-        } = product;
+    return new Promise((resolve, reject) => {
+      // Controlla se esiste un prodotto con lo stesso nome
+      const checkQuery = `
+      SELECT "ProductId" 
+      FROM public."Product" 
+      WHERE LOWER("ProductName") = LOWER($1);
+    `;
 
-        const query = `
-          INSERT INTO "Product" (
-            "ProductName",
-            "ProductDescription",
-            "ProductAmount",
-            "UnitPrice",
-            "Height",
-            "Width",
-            "Depth",
-            "Weight",
-            "CategoryId",
-            "ProductModelGroupId"
-          )
-          VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
-          RETURNING "ProductId"`;
-
-        const newProduct = await db.query(query, [
-          ProductName,
-          ProductDescription,
-          ProductAmount,
-          UnitPrice,
-          Height,
-          Width,
-          Depth,
-          Weight,
-          CategoryId,
-          ProductModelGroupId,
-        ]);
-
-        const productId = newProduct.rows[0].ProductId;
-
-        const uploadDir = path.join(__dirname, "../public/uploads");
-        if (!fs.existsSync(uploadDir)) {
-          fs.mkdirSync(uploadDir, { recursive: true });
+      db.query(checkQuery, [product.ProductName], (checkError, checkResult) => {
+        if (checkError) {
+          cleanUpFiles(files);
+          return reject(checkError);
         }
 
-        const imagePromises = files.map((file) => {
-          const fileName = `${Date.now()}-${file.originalname}`;
-          const filePath = path.join(uploadDir, fileName);
-
-          fs.writeFileSync(filePath, file.buffer);
-
-          return db.query(
-            `INSERT INTO "Productimage" ("ProductId", "ProductImageUrl") VALUES ($1, $2)`,
-            [productId, `/uploads/${fileName}`]
+        if (checkResult.rows.length > 0) {
+          cleanUpFiles(files);
+          return reject(
+            Object.assign(
+              new Error("Un prodotto con questo nome esiste già."),
+              { status: 409 }
+            )
           );
-        });
+        }
 
-        await Promise.all(imagePromises);
-        resolve(productId);
-      } catch (error) {
-        reject(error);
-      }
+        // Query per inserire un nuovo prodotto
+        const insertQuery = `
+        INSERT INTO public."Product"("ProductName", "ProductDescription", "ProductAmount", 
+        "UnitPrice", "Height", "Width", "Depth", "Weight", "CategoryId")
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+        RETURNING "ProductId";
+      `;
+
+        const insertValues = [
+          product.ProductName,
+          product.ProductDescription,
+          product.ProductAmount,
+          product.ProductPrice,
+          product.ProductHeight,
+          product.ProductWidth,
+          product.ProductDepth,
+          product.ProductWeight,
+          product.CategoryId,
+        ];
+
+        db.query(insertQuery, insertValues, (insertError, insertResult) => {
+          if (insertError) {
+            cleanUpFiles(files);
+            return reject(insertError);
+          }
+
+          const productId = insertResult.rows[0].ProductId;
+
+          // Gestisci l'inserimento del prodotto in evidenza se richiesto
+          const handleFeatured = () =>
+            new Promise((resolveFeatured, rejectFeatured) => {
+              if (product.IsFeatured === "true") {
+                const featuredQuery = `
+                INSERT INTO public."FeaturedProduct"("ProductId")
+                VALUES ($1);
+              `;
+
+                db.query(featuredQuery, [productId], (featuredError) => {
+                  if (featuredError) {
+                    rejectFeatured(featuredError);
+                  } else {
+                    resolveFeatured();
+                  }
+                });
+              } else {
+                resolveFeatured();
+              }
+            });
+
+          // Inserisci le immagini
+          const handleImages = () =>
+            Promise.all(
+              files.map((file) => {
+                return new Promise((resolveImage, rejectImage) => {
+                  const imageQuery = `
+                  INSERT INTO "Productimage" ("ProductId", "ProductImageUrl")
+                  VALUES ($1, $2);
+                `;
+                  db.query(
+                    imageQuery,
+                    [productId, file.filename],
+                    (imageError) => {
+                      if (imageError) {
+                        rejectImage(imageError);
+                      } else {
+                        resolveImage();
+                      }
+                    }
+                  );
+                });
+              })
+            );
+
+          // Esegui le operazioni in sequenza
+          handleFeatured()
+            .then(handleImages)
+            .then(() => {
+              resolve({ productId });
+            })
+            .catch((error) => {
+              cleanUpFiles(files);
+              reject(error);
+            });
+        });
+      });
     });
   }
 
@@ -329,33 +387,73 @@ class ProductsModel {
     }
   }
 
-  static async deleteProduct(id, db) {
-    try {
-      const query = `DELETE FROM "Product" WHERE "ProductId" = $1`;
-      const result = await db.query(query, [id]);
+  static deleteProduct(Product, db) {
+    return new Promise(async (resolve, reject) => {
+      try {
+        const imageQuery = `
+        SELECT "ProductImageUrl"
+        FROM "Productimage"
+        WHERE "ProductId" = $1;
+      `;
+        const imageResult = await db.query(imageQuery, [Product.ProductId]);
 
-      return result.rowCount > 0;
-    } catch (error) {
-      console.error("Errore nell'eliminazione del prodotto:", error);
-      throw new Error("Impossibile eliminare il prodotto");
-    }
+        const imageDeletePromises = imageResult.rows.map((image) => {
+          return new Promise((deleteResolve, deleteReject) => {
+            const filePath = path.join(
+              __dirname,
+              "..",
+              "public/uploads/ProductImages",
+              image.ProductImageUrl
+            );
+
+            console.log("File Path:", filePath);
+
+            if (fs.existsSync(filePath)) {
+              fs.unlink(filePath, (err) => {
+                if (err) {
+                  deleteReject(err);
+                } else {
+                  deleteResolve();
+                }
+              });
+            } else {
+              console.log("File does not exist:", filePath);
+              deleteResolve(); // Ignora file mancanti
+            }
+          });
+        });
+
+        await Promise.all(imageDeletePromises);
+
+        const deleteImagesQuery = `
+        DELETE FROM "Productimage"
+        WHERE "ProductId" = $1;
+      `;
+        await db.query(deleteImagesQuery, [Product.ProductId]);
+
+        const deleteProductQuery = `
+        DELETE FROM public."Product"
+        WHERE "ProductId" = $1;
+      `;
+        await db.query(deleteProductQuery, [Product.ProductId]);
+
+        resolve({ success: true });
+      } catch (error) {
+        reject(error);
+      }
+    });
   }
 
   static async deleteCategory(Category, db) {
     return new Promise((resolve, reject) => {
-      try {
-        const query = `DELETE FROM "Category" WHERE "CategoryId" = $1`;
-        db.query(query, [Category.CategoryId], (error, results) => {
-          if (error) {
-            reject(error);
-          } else {
-            resolve(results);
-          }
-        });
-      } catch (error) {
-        console.error("Errore nell'eliminazione della categoria:", error);
-        throw new Error("Impossibile eliminare la categoria");
-      }
+      const query = `DELETE FROM "Category" WHERE "CategoryId" = $1`;
+      db.query(query, [Category.CategoryId], (error, results) => {
+        if (error) {
+          reject(error);
+        } else {
+          resolve(results);
+        }
+      });
     });
   }
 
@@ -412,6 +510,26 @@ class ProductsModel {
       );
     });
   }
+}
+
+// Funzione di utilità per eliminare i file
+function cleanUpFiles(files) {
+  files.forEach((file) => {
+    const filePath = path.resolve(
+      __dirname,
+      "..",
+      "public/uploads/ProductImages",
+      file.filename
+    );
+    fs.unlink(filePath, (err) => {
+      if (err) {
+        console.error(
+          `Errore durante l'eliminazione del file: ${filePath}`,
+          err
+        );
+      }
+    });
+  });
 }
 
 module.exports = ProductsModel;

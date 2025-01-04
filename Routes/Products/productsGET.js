@@ -27,13 +27,6 @@ const productsGET = (db) => {
   router.get("/GetAllCategories", authenticateMiddleware, (req, res) => {
     ProductsController.getAllCategories(req, res, db);
   });
-  router.get(
-    "/GetProductModelGroupById/:id",
-    authenticateMiddleware,
-    (req, res) => {
-      ProductsController.getProductModelGroupById(req, res, db);
-    }
-  );
   router.get("/SearchProductByName", authenticateMiddleware, (req, res) => {
     ProductsController.searchProductByName(req, res, db);
   });

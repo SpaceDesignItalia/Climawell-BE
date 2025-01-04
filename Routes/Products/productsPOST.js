@@ -8,7 +8,7 @@ const fs = require("fs");
 const authenticateMiddleware = require("../../middlewares/Services/Authentication/Authmiddleware");
 
 // Ensure the upload directory exists
-const uploadDir = "./public/uploads/CampaignImages";
+const uploadDir = "./public/uploads/ProductImages";
 if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
 }

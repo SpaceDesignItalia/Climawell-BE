@@ -103,22 +103,7 @@ class ProductsController {
       res.status(500).send("Recupero delle categorie fallito");
     }
   }
-  static async getProductModelGroupById(req, res, db) {
-    try {
-      const productModelGroup = await Products.getProductModelGroupById(
-        req.params.id,
-        db
-      );
-      if (productModelGroup) {
-        res.status(200).json(productModelGroup);
-      } else {
-        res.status(500).send("Recupero del gruppo di modelli fallito");
-      }
-    } catch (error) {
-      console.error("Errore nel recupero del gruppo di modelli:", error);
-      res.status(500).send("Recupero del gruppo di modelli fallito");
-    }
-  }
+
   static async searchProductByName(req, res, db) {
     try {
       const products = await Products.searchProductByName(
@@ -155,15 +140,18 @@ class ProductsController {
   static async addProduct(req, res, db) {
     try {
       const product = req.body;
-      const images = req.files;
+      const files = req.files;
 
-      console.log("Prodotto: ", req.params);
-      console.log("Immagini: ", req.files);
-
-      /* await Products.addProduct(product, images, db); */
+      await Products.addProduct(product, files, db);
     } catch (error) {
       console.error("Errore nell'aggiunta del prodotto:", error);
-      res.status(500).send("Aggiunta del prodotto fallita");
+      // Se l'errore è relativo al nome duplicato, risponde con 409 Conflict
+      if (error.status == 409) {
+        res.status(409).send("Esiste già un prodotto con questo nome.");
+      } else {
+        // Altrimenti, restituisce un errore generico
+        res.status(500).send("Aggiunta della categoria fallita");
+      }
     }
   }
 
@@ -206,13 +194,9 @@ class ProductsController {
   }
   static async deleteProduct(req, res, db) {
     try {
-      const productId = req.params.id;
-      const deletedProduct = await Products.deleteProduct(productId, db);
-      if (deletedProduct) {
-        res.status(200).json(deletedProduct);
-      } else {
-        res.status(500).send("Eliminazione del prodotto fallita");
-      }
+      const ProductData = req.query.ProductData;
+      await Products.deleteProduct(ProductData, db);
+      res.status(200).send("Prodotto eliminato con successo!");
     } catch (error) {
       console.error("Errore nell'eliminazione del prodotto:", error);
       res.status(500).send("Eliminazione del prodotto fallita");

@@ -7,7 +7,7 @@ const authenticateMiddleware = require("../../middlewares/Services/Authenticatio
 const productsDELETE = (db) => {
   // Definisci le route DELETE qui
 
-  router.delete("/DeleteProduct/:id", authenticateMiddleware, (req, res) => {
+  router.delete("/DeleteProduct", authenticateMiddleware, (req, res) => {
     ProductsController.deleteProduct(req, res, db);
   });
 
