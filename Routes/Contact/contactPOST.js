@@ -42,11 +42,11 @@ const contactPOST = (db) => {
     ContactController.UploadContacts(req, res, db);
   });
 
-  router.post("/DeletePrivateContact", authenticateMiddleware, (req, res) => {
+  router.post("/DeletePrivateContact", (req, res) => {
     ContactController.DeletePrivateContact(req, res, db);
   });
 
-  router.post("/DeleteCompanyContact", authenticateMiddleware, (req, res) => {
+  router.post("/DeleteCompanyContact", (req, res) => {
     ContactController.DeleteCompanyContact(req, res, db);
   });
 
