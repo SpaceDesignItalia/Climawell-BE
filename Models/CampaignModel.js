@@ -4,7 +4,7 @@ const Messages = require("../middlewares/WhatsappBusiness/Messages");
 class CampaignModel {
   static GetAllEmailCampaigns(db) {
     return new Promise((resolve, reject) => {
-      const query = `SELECT "EmailCampaignId", "Title", "Date" FROM public."EmailCampaign";`;
+      const query = `SELECT "EmailCampaignId", "Title", "Date" FROM public."EmailCampaign" ORDER BY "EmailCampaignId" DESC;`;
       db.query(query, (error, result) => {
         if (error) {
           reject(error);
@@ -16,7 +16,7 @@ class CampaignModel {
 
   static GetAllWhatsappCampaigns(db) {
     return new Promise((resolve, reject) => {
-      const query = `SELECT "WhatsappCampaignId", "Title", "Date" FROM public."WhatsappCampaign";`;
+      const query = `SELECT "WhatsappCampaignId", "Title", "Date" FROM public."WhatsappCampaign" ORDER BY "WhatsappCampaignId" DESC;`;
       db.query(query, (error, result) => {
         if (error) {
           reject(error);
