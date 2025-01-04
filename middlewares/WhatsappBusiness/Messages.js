@@ -5,6 +5,7 @@ const fs = require("fs");
 
 class Messages {
   static async sendPrivateMessage(title, description, imagePath, db) {
+    console.log("Inizio l'invio dei messaggi privati.");
     // Carica l'immagine richiesta
     const imageId = await uploadImage(imagePath);
 
