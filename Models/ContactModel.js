@@ -186,11 +186,11 @@ class ContactModel {
     });
   }
 
-  static DeletePrivateContact(db, CustomerEmail) {
+  static DeletePrivateContact(db, CampaignToken) {
     return new Promise((resolve, reject) => {
-      const query = `DELETE FROM public."Customer" WHERE "CustomerEmail" = $1;`;
+      const query = `DELETE FROM public."Customer" WHERE "CampaignToken" = $1;`;
 
-      db.query(query, [CustomerEmail], (error, result) => {
+      db.query(query, [CampaignToken], (error, result) => {
         if (error) {
           return reject(error);
         }
@@ -199,11 +199,11 @@ class ContactModel {
     });
   }
 
-  static DeleteCompanyContact(db, CompanyEmail) {
+  static DeleteCompanyContact(db, CampaignToken) {
     return new Promise((resolve, reject) => {
-      const query = `DELETE FROM public."Company" WHERE "CompanyEmail" = $1;`;
+      const query = `DELETE FROM public."Company" WHERE "CampaignToken" = $1;`;
 
-      db.query(query, [CompanyEmail], (error, result) => {
+      db.query(query, [CampaignToken], (error, result) => {
         if (error) {
           return reject(error);
         }

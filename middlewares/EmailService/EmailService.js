@@ -20,9 +20,6 @@ const transporter = nodemailer.createTransport({
 });
 
 class EmailService {
- 
-
-
   static async startPrivateCampaign(description, title, object, imagePath, db) {
     try {
       const contacts = await ContactModel.GetAllPrivate(db);
@@ -45,8 +42,17 @@ class EmailService {
           const surname = contact.CustomerFullName?.split(" ")[1] || "";
           const email = contact.CustomerEmail;
 
+          const token = [...Array(8)]
+            .map(() =>
+              (
+                Math.random().toString(36) +
+                "ABCDEFGHIJKLMNOPQRSTUVWXYZ!@#$%^&*()"
+              ).charAt(Math.floor(Math.random() * 62))
+            )
+            .join("");
+
           const unsubscribeUrl = new URL(
-            `/contacts/remove-private/${encodeURIComponent(contact.CustomerEmail)}`,
+            `/contacts/remove-private/${token}/`,
             process.env.FRONTEND_URL
           ).toString();
 
@@ -61,21 +67,25 @@ class EmailService {
           const emailOptions = {
             from: {
               name: "Climawell SRL",
-              address: mailData.mail
+              address: mailData.mail,
             },
             to: email,
             subject: title,
             text: object,
             html: htmlContent,
-            attachments: [{
-              filename: path.basename(imagePath),
-              path: imagePath,
-              cid: imageId // Questo collega l'allegato al tag img nell'HTML
-            }]
+            attachments: [
+              {
+                filename: path.basename(imagePath),
+                path: imagePath,
+                cid: imageId, // Questo collega l'allegato al tag img nell'HTML
+              },
+            ],
           };
 
           await transporter.sendMail(emailOptions);
-          console.log(`Email inviata con successo a ${email}`);
+          const query = `UPDATE public."Customer" SET "CampaignToken" = $1 WHERE "CustomerEmail" = $2;`;
+          await db.query(query, [token, email]);
+          console.log("Token: ", token, " - Email: ", email);
         } catch (error) {
           console.error(`Errore nell'invio dell'email a ${email}:`, error);
         }
@@ -84,16 +94,15 @@ class EmailService {
       // Processa i contatti in batch
       const batchSize = 50;
       const contactArray = Array.isArray(contacts) ? contacts : [contacts];
-      
+
       for (let i = 0; i < contactArray.length; i += batchSize) {
         const batch = contactArray.slice(i, i + batchSize);
-        await Promise.all(batch.map(contact => sendEmail(contact)));
-        
+        await Promise.all(batch.map((contact) => sendEmail(contact)));
+
         if (i + batchSize < contactArray.length) {
-          await new Promise(resolve => setTimeout(resolve, 1000));
+          await new Promise((resolve) => setTimeout(resolve, 1000));
         }
       }
-
     } catch (error) {
       console.error("Errore durante la campagna privata:", error);
       throw error;
@@ -113,19 +122,28 @@ class EmailService {
       );
       const emailTemplate = fs.readFileSync(emailTemplatePath, "utf-8");
 
-      const sendEmail = (company) => {
+      const sendEmail = async (company) => {
         const email = company.CompanyEmail;
         const name = company.CompanyName;
+
+        const token = [...Array(8)]
+          .map(() =>
+            (
+              Math.random().toString(36) +
+              "ABCDEFGHIJKLMNOPQRSTUVWXYZ!@#$%^&*()"
+            ).charAt(Math.floor(Math.random() * 62))
+          )
+          .join("");
+
+        const unsubscribeUrl = new URL(
+          `/contacts/remove-company/${token}/`,
+          process.env.FRONTEND_URL
+        ).toString();
 
         const htmlContent = emailTemplate
           .replace("${description}", description)
           .replace("${name}", name || "")
-          .replace(
-            "${link}",
-            process.env.FRONTEND_URL +
-              "/contacts/remove-company/" +
-              company.CompanyEmail
-          )
+          .replace("${link}", unsubscribeUrl)
           .replace(
             "${image}",
             process.env.BACKEND_URL + imagePath.replace("public", "")
@@ -142,9 +160,11 @@ class EmailService {
         transporter.sendMail(emailOptions, (error, info) => {
           if (error) {
             console.error(`Failed to send email to ${email}: ${error.message}`);
-          } else {
           }
         });
+        const query = `UPDATE public."Company" SET "CampaignToken" = $1 WHERE "CompanyEmail" = $2;`;
+        await db.query(query, [token, email]);
+        console.log("Token: ", token, " - Email: ", email);
       };
 
       // Handle both single company and array of companies

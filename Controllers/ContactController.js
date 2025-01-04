@@ -68,8 +68,8 @@ class ContactController {
 
   static async DeletePrivateContact(req, res, db) {
     try {
-      const { CustomerEmail } = req.body;
-      await ContactModel.DeletePrivateContact(db, CustomerEmail);
+      const { CampaignToken } = req.body;
+      await ContactModel.DeletePrivateContact(db, CampaignToken);
       res.status(200).send("Cliente eliminato con successo.");
     } catch (error) {
       console.error("Errore nell'eliminare il cliente:", error);
@@ -79,8 +79,8 @@ class ContactController {
 
   static async DeleteCompanyContact(req, res, db) {
     try {
-      const { CompanyEmail } = req.body;
-      await ContactModel.DeleteCompanyContact(db, CompanyEmail);
+      const { CampaignToken } = req.body;
+      await ContactModel.DeleteCompanyContact(db, CampaignToken);
       res.status(200).send("Azienda eliminata con successo.");
     } catch (error) {
       console.error("Errore nell'eliminare l'azienda:", error);
