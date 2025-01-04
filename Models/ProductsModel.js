@@ -8,6 +8,7 @@ class ProductsModel {
         SELECT 
             p.*,
             c.*,
+            pd."DiscountPercentage",
             CASE 
                 WHEN fp."ProductId" IS NOT NULL THEN true 
                 ELSE false 
@@ -19,7 +20,8 @@ class ProductsModel {
              LIMIT 1) AS "FirstImage"
         FROM "Product" p
         LEFT JOIN "Category" c ON p."CategoryId" = c."CategoryId"
-        LEFT JOIN "FeaturedProduct" fp ON p."ProductId" = fp."ProductId";
+        LEFT JOIN "FeaturedProduct" fp ON p."ProductId" = fp."ProductId"
+        LEFT JOIN "ProductDiscount" pd ON p."ProductId" = pd."ProductId"
       `;
 
       db.query(query, (error, result) => {
@@ -52,6 +54,7 @@ class ProductsModel {
         SELECT 
             p.*,
             c.*,
+            pd."DiscountPercentage",
             CASE 
                 WHEN fp."ProductId" IS NOT NULL THEN true 
                 ELSE false 
@@ -63,7 +66,8 @@ class ProductsModel {
              LIMIT 1) AS "FirstImage"
         FROM "Product" p
         LEFT JOIN "Category" c ON p."CategoryId" = c."CategoryId"
-        JOIN "FeaturedProduct" fp ON p."ProductId" = fp."ProductId";
+        JOIN "FeaturedProduct" fp ON p."ProductId" = fp."ProductId"
+        LEFT JOIN "ProductDiscount" pd ON p."ProductId" = pd."ProductId"
       `;
 
       db.query(query, (error, result) => {
@@ -78,11 +82,22 @@ class ProductsModel {
 
   static getProductById(ProductId, db) {
     return new Promise((resolve, reject) => {
-      const query = `
-        SELECT * FROM "Product"
-        LEFT JOIN "Category" ON "Product"."CategoryId" = "Category"."CategoryId"
-        JOIN "Productimage" ON "Product"."ProductId" = "Productimage"."ProductId"
-        WHERE "Product"."ProductId" = $1`;
+      const query = `SELECT 
+              p.*,
+              c.*,
+              pd."DiscountPercentage",
+              CASE 
+                  WHEN fp."ProductId" IS NOT NULL THEN true 
+                  ELSE false 
+              END AS "isFeatured",
+              pi."ProductImageId",
+              pi."ProductImageUrl"
+          FROM "Product" p
+          LEFT JOIN "Category" c ON p."CategoryId" = c."CategoryId"
+          LEFT JOIN "FeaturedProduct" fp ON p."ProductId" = fp."ProductId"
+          LEFT JOIN "ProductDiscount" pd ON p."ProductId" = pd."ProductId"
+          LEFT JOIN "Productimage" pi ON pi."ProductId" = p."ProductId"
+          WHERE p."ProductId" = $1`;
 
       db.query(query, [ProductId], (error, result) => {
         if (error) {
@@ -159,6 +174,7 @@ class ProductsModel {
         SELECT 
             p.*,
             c.*,
+            pd."DiscountPercentage",
             CASE 
                 WHEN fp."ProductId" IS NOT NULL THEN true 
                 ELSE false 
@@ -171,6 +187,7 @@ class ProductsModel {
         FROM "Product" p
         LEFT JOIN "Category" c ON p."CategoryId" = c."CategoryId"
         LEFT JOIN "FeaturedProduct" fp ON p."ProductId" = fp."ProductId"
+        LEFT JOIN "ProductDiscount" pd ON p."ProductId" = pd."ProductId"
         WHERE p."ProductName" ILIKE $1;
       `;
 
@@ -194,6 +211,7 @@ class ProductsModel {
 
             p.*,
             c.*,
+            pd."DiscountPercentage",
             CASE
                 WHEN fp."ProductId" IS NOT NULL THEN true
                 ELSE false
@@ -208,6 +226,7 @@ class ProductsModel {
         FROM "Product" p
         LEFT JOIN "Category" c ON p."CategoryId" = c."CategoryId"
         JOIN "FeaturedProduct" fp ON p."ProductId" = fp."ProductId"
+        LEFT JOIN "ProductDiscount" pd ON p."ProductId" = pd."ProductId"
         WHERE p."ProductName" ILIKE $1;
       `;
       const values = [`%${productName}%`];
@@ -228,6 +247,7 @@ class ProductsModel {
         SELECT
             p.*,
             c.*,
+            pd."DiscountPercentage",
             CASE
                 WHEN fp."ProductId" IS NOT NULL THEN true
                 ELSE false
@@ -240,6 +260,7 @@ class ProductsModel {
         FROM "Product" p
         LEFT JOIN "Category" c ON p."CategoryId" = c."CategoryId"
         LEFT JOIN "FeaturedProduct" fp ON p."ProductId" = fp."ProductId"
+        LEFT JOIN "ProductDiscount" pd ON p."ProductId" = pd."ProductId"
         WHERE p."ProductName" ILIKE '%' || $1 || '%'
         ORDER BY "${orderBy}" ${order};
       `;
@@ -260,6 +281,7 @@ class ProductsModel {
         SELECT
             p.*,
             c.*,
+            pd."DiscountPercentage",
             CASE
                 WHEN fp."ProductId" IS NOT NULL THEN true
                 ELSE false
@@ -272,6 +294,7 @@ class ProductsModel {
         FROM "Product" p
         LEFT JOIN "Category" c ON p."CategoryId" = c."CategoryId"
         JOIN "FeaturedProduct" fp ON p."ProductId" = fp."ProductId"
+        LEFT JOIN "ProductDiscount" pd ON p."ProductId" = pd."ProductId"
         WHERE p."ProductName" ILIKE '%' || $1 || '%'
         ORDER BY "${orderBy}" ${order};
       `;
