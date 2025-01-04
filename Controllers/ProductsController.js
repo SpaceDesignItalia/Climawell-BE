@@ -44,7 +44,7 @@ class ProductsController {
   }
   static async getProductById(req, res, db) {
     try {
-      const ProductId = req.params.id;
+      const ProductId = req.query.id;
       const product = await Products.getProductById(ProductId, db);
       if (product) {
         res.status(200).json(product);
@@ -107,7 +107,7 @@ class ProductsController {
   static async searchProductByName(req, res, db) {
     try {
       const products = await Products.searchProductByName(
-        req.query.searchQuery,
+        req.params.searchQuery,
         db
       );
       if (products) {
@@ -120,6 +120,67 @@ class ProductsController {
       res.status(500).send("Ricerca del prodotto fallita");
     }
   }
+  static async searchFeaturedProductByName(req, res, db) {
+    try {
+      const products = await Products.searchFeaturedProductByName(
+        req.query.searchQuery,
+        db
+      );
+      if (products) {
+        res.status(200).json(products);
+      } else {
+        res.status(500).send("Ricerca del prodotto in evidenza fallita");
+      }
+    } catch (error) {
+      console.error("Errore nella ricerca del prodotto in evidenza:", error);
+      res.status(500).send("Ricerca del prodotto in evidenza fallita");
+    }
+  }
+
+  static async orderProductsBy(req, res, db) {
+    const order = req.query.order;
+    const orderBy = req.query.orderBy;
+    const searchQuery = req.query.searchQuery;
+    try {
+      const products = await Products.orderProductsBy(
+        db,
+        order,
+        orderBy,
+        searchQuery
+      );
+      if (products) {
+        res.status(200).json(products);
+      } else {
+        res.status(500).send("Ordinamento dei prodotti per prezzo fallito");
+      }
+    } catch (error) {
+      console.error("Errore nell'ordinamento dei prodotti per prezzo:", error);
+      res.status(500).send("Ordinamento dei prodotti per prezzo fallito");
+    }
+  }
+
+  static async orderFeaturedProductsBy(req, res, db) {
+    const order = req.query.order;
+    const orderBy = req.query.orderBy;
+    const searchQuery = req.query.searchQuery;
+    try {
+      const products = await Products.orderFeaturedProductsBy(
+        db,
+        order,
+        orderBy,
+        searchQuery
+      );
+      if (products) {
+        res.status(200).json(products);
+      } else {
+        res.status(500).send("Ordinamento dei prodotti in evidenza fallito");
+      }
+    } catch (error) {
+      console.error("Errore nell'ordinamento dei prodotti in evidenza:", error);
+      res.status(500).send("Ordinamento dei prodotti in evidenza fallito");
+    }
+  }
+
   static async searchCategoryByName(req, res, db) {
     try {
       const categories = await Products.searchCategoryByName(

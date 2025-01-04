@@ -49,40 +49,28 @@ class ProductsModel {
   static getFeaturedProducts(db) {
     return new Promise((resolve, reject) => {
       const query = `
-        SELECT * 
-        FROM "Product"
-        LEFT JOIN "Category" ON "Product"."CategoryId" = "Category"."CategoryId"
-        JOIN "Productimage" ON "Product"."ProductId" = "Productimage"."ProductId"
-        JOIN "FeaturedProduct" ON "Product"."ProductId" = "FeaturedProduct"."idproduct"
-        LEFT JOIN "ModelGroup" ON "Product"."ProductModelGroupId" = "ModelGroup"."ProductModelId"`;
+        SELECT 
+            p.*,
+            c.*,
+            CASE 
+                WHEN fp."ProductId" IS NOT NULL THEN true 
+                ELSE false 
+            END AS "isFeatured",
+            (SELECT pi."ProductImageUrl"
+             FROM "Productimage" pi
+             WHERE pi."ProductId" = p."ProductId"
+             ORDER BY pi."ProductImageId" ASC
+             LIMIT 1) AS "FirstImage"
+        FROM "Product" p
+        LEFT JOIN "Category" c ON p."CategoryId" = c."CategoryId"
+        JOIN "FeaturedProduct" fp ON p."ProductId" = fp."ProductId";
+      `;
 
       db.query(query, (error, result) => {
         if (error) {
           reject(error);
         } else {
-          const groupedProducts = result.rows.reduce((acc, row) => {
-            const productId = row.ProductId;
-
-            if (!acc[productId]) {
-              acc[productId] = {
-                ...row,
-                images: [],
-              };
-            }
-
-            acc[productId].images.push({
-              ProductImageId: row.ProductImageId,
-              ProductImageUrl: row.ProductImageUrl,
-            });
-
-            return acc;
-          }, {});
-
-          Object.values(groupedProducts).forEach((product) => {
-            product.images.sort((a, b) => a.ProductImageId - b.ProductImageId);
-          });
-
-          resolve(Object.values(groupedProducts));
+          resolve(result.rows);
         }
       });
     });
@@ -94,7 +82,6 @@ class ProductsModel {
         SELECT * FROM "Product"
         LEFT JOIN "Category" ON "Product"."CategoryId" = "Category"."CategoryId"
         JOIN "Productimage" ON "Product"."ProductId" = "Productimage"."ProductId"
-        LEFT JOIN "ModelGroup" ON "Product"."ProductModelGroupId" = "ModelGroup"."ProductModelId"
         WHERE "Product"."ProductId" = $1`;
 
       db.query(query, [ProductId], (error, result) => {
@@ -166,22 +153,6 @@ class ProductsModel {
     }
   }
 
-  static async getProductModelGroupById(id, db) {
-    try {
-      const query = `SELECT * FROM "ProductModelGroup" WHERE "ProductModelGroupId" = $1`;
-      const { rows } = await db.query(query, [id]);
-      return rows.length > 0 ? rows[0] : null;
-    } catch (error) {
-      console.error(
-        "Errore nel recupero del gruppo di modelli del prodotto:",
-        error
-      );
-      throw new Error(
-        "Impossibile recuperare il gruppo di modelli del prodotto"
-      );
-    }
-  }
-
   static searchProductByName(productName, db) {
     return new Promise((resolve, reject) => {
       const query = `
@@ -206,6 +177,106 @@ class ProductsModel {
       const values = [`%${productName}%`]; // Per una ricerca parziale
 
       db.query(query, values, (error, result) => {
+        if (error) {
+          reject(error);
+        } else {
+          resolve(result.rows);
+        }
+      });
+    });
+  }
+
+  static searchFeaturedProductByName(productName, db) {
+    return new Promise((resolve, reject) => {
+      const query = `
+
+        SELECT
+
+            p.*,
+            c.*,
+            CASE
+                WHEN fp."ProductId" IS NOT NULL THEN true
+                ELSE false
+            END AS "isFeatured",
+            (SELECT pi."ProductImageUrl"
+
+
+              FROM "Productimage" pi
+              WHERE pi."ProductId" = p."ProductId"
+              ORDER BY pi."ProductImageId" ASC
+              LIMIT 1) AS "FirstImage"
+        FROM "Product" p
+        LEFT JOIN "Category" c ON p."CategoryId" = c."CategoryId"
+        JOIN "FeaturedProduct" fp ON p."ProductId" = fp."ProductId"
+        WHERE p."ProductName" ILIKE $1;
+      `;
+      const values = [`%${productName}%`];
+
+      db.query(query, values, (error, result) => {
+        if (error) {
+          reject(error);
+        } else {
+          resolve(result.rows);
+        }
+      });
+    });
+  }
+
+  static orderProductsBy(db, order, orderBy, searchQuery) {
+    return new Promise((resolve, reject) => {
+      const query = `
+        SELECT
+            p.*,
+            c.*,
+            CASE
+                WHEN fp."ProductId" IS NOT NULL THEN true
+                ELSE false
+            END AS "isFeatured",
+            (SELECT pi."ProductImageUrl"
+              FROM "Productimage" pi
+              WHERE pi."ProductId" = p."ProductId"
+              ORDER BY pi."ProductImageId" ASC
+              LIMIT 1) AS "FirstImage"
+        FROM "Product" p
+        LEFT JOIN "Category" c ON p."CategoryId" = c."CategoryId"
+        LEFT JOIN "FeaturedProduct" fp ON p."ProductId" = fp."ProductId"
+        WHERE p."ProductName" ILIKE '%' || $1 || '%'
+        ORDER BY "${orderBy}" ${order};
+      `;
+
+      db.query(query, [searchQuery], (error, result) => {
+        if (error) {
+          reject(error);
+        } else {
+          resolve(result.rows);
+        }
+      });
+    });
+  }
+
+  static orderFeaturedProductsBy(db, order, orderBy, searchQuery) {
+    return new Promise((resolve, reject) => {
+      const query = `
+        SELECT
+            p.*,
+            c.*,
+            CASE
+                WHEN fp."ProductId" IS NOT NULL THEN true
+                ELSE false
+            END AS "isFeatured",
+            (SELECT pi."ProductImageUrl"
+              FROM "Productimage" pi
+              WHERE pi."ProductId" = p."ProductId"
+              ORDER BY pi."ProductImageId" ASC
+              LIMIT 1) AS "FirstImage"
+        FROM "Product" p
+        LEFT JOIN "Category" c ON p."CategoryId" = c."CategoryId"
+        JOIN "FeaturedProduct" fp ON p."ProductId" = fp."ProductId"
+        WHERE p."ProductName" ILIKE '%' || $1 || '%'
+        ORDER BY "${orderBy}" ${order};
+      `;
+
+      db.query(query, [searchQuery], (error, result) => {
         if (error) {
           reject(error);
         } else {

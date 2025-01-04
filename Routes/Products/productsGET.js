@@ -6,29 +6,38 @@ const authenticateMiddleware = require("../../middlewares/Services/Authenticatio
 
 const productsGET = (db) => {
   // Definisci le route GET qui
-  router.get("/GetAllProducts", authenticateMiddleware, (req, res) => {
+  router.get("/GetAllProducts", (req, res) => {
     ProductsController.getAllProducts(req, res, db);
   });
   router.get("/IsFeatured", authenticateMiddleware, (req, res) => {
     ProductsController.isFeatured(req, res, db);
   });
-  router.get("/GetFeaturedProducts", authenticateMiddleware, (req, res) => {
+  router.get("/GetFeaturedProducts", (req, res) => {
     ProductsController.getFeaturedProducts(req, res, db);
   });
-  router.get("/GetProductById", authenticateMiddleware, (req, res) => {
+  router.get("/GetProductById", (req, res) => {
     ProductsController.getProductById(req, res, db);
   });
   router.get("/GetCategoryById", authenticateMiddleware, (req, res) => {
     ProductsController.getCategoryById(req, res, db);
   });
-  router.get("/GetImagesByProductId", authenticateMiddleware, (req, res) => {
+  router.get("/GetImagesByProductId", (req, res) => {
     ProductsController.getImagesByProductId(req, res, db);
   });
-  router.get("/GetAllCategories", authenticateMiddleware, (req, res) => {
+  router.get("/GetAllCategories", (req, res) => {
     ProductsController.getAllCategories(req, res, db);
   });
-  router.get("/SearchProductByName", authenticateMiddleware, (req, res) => {
+  router.get("/SearchProductByName", (req, res) => {
     ProductsController.searchProductByName(req, res, db);
+  });
+  router.get("/SearchFeaturedProductByName", (req, res) => {
+    ProductsController.searchProductByName(req, res, db);
+  });
+  router.get("/OrderProductsBy", (req, res) => {
+    ProductsController.orderProductsBy(req, res, db);
+  });
+  router.get("/OrderFeaturedProductsBy", (req, res) => {
+    ProductsController.orderFeaturedProductsBy(req, res, db);
   });
   router.get("/SearchCategoryByName", authenticateMiddleware, (req, res) => {
     ProductsController.searchCategoryByName(req, res, db);
