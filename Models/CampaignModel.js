@@ -4,7 +4,7 @@ const Messages = require("../middlewares/WhatsappBusiness/Messages");
 class CampaignModel {
   static GetAllEmailCampaigns(db) {
     return new Promise((resolve, reject) => {
-      const query = `SELECT "EmailCampaignId", "Title", "Date" FROM public."EmailCampaign" ORDER BY "EmailCampaignId" DESC;`;
+      const query = `SELECT * FROM public."EmailCampaign" ORDER BY "EmailCampaignId" DESC;`;
       db.query(query, (error, result) => {
         if (error) {
           reject(error);
