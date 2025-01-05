@@ -1,6 +1,4 @@
 const Products = require("../Models/ProductsModel");
-const path = require("path");
-const fs = require("fs");
 
 class ProductsController {
   static async getAllProducts(req, res, db) {
@@ -195,6 +193,65 @@ class ProductsController {
     } catch (error) {
       console.error("Errore nella ricerca della categoria:", error);
       res.status(500).send("Ricerca della categoria fallita");
+    }
+  }
+
+  static async getWarehouseStats(req, res, db) {
+    try {
+      const stats = await Products.getWarehouseStats(db);
+      if (stats) {
+        res.status(200).json(stats);
+      }
+    } catch (error) {
+      console.error("Errore nel recupero delle statistiche:", error);
+      res.status(500).send("Recupero delle statistiche fallita");
+    }
+  }
+  static async getCategoryStats(req, res, db) {
+    try {
+      const stats = await Products.getCategoryStats(db);
+      if (stats) {
+        res.status(200).json(stats);
+      }
+    } catch (error) {
+      console.error("Errore nel recupero delle statistiche:", error);
+      res.status(500).send("Recupero delle statistiche fallita");
+    }
+  }
+
+  static async getWarehouseValue(req, res, db) {
+    try {
+      const stats = await Products.getWarehouseValue(db);
+      if (stats) {
+        res.status(200).json(stats);
+      }
+    } catch (error) {
+      console.error("Errore nel recupero delle statistiche:", error);
+      res.status(500).send("Recupero delle statistiche fallita");
+    }
+  }
+  static async getWarehouseValueYear(req, res, db) {
+    try {
+      const stats = await Products.getWarehouseValueYear(db);
+      if (stats) {
+        res.status(200).json(stats);
+      }
+    } catch (error) {
+      console.error("Errore nel recupero delle statistiche:", error);
+      res.status(500).send("Recupero delle statistiche fallita");
+    }
+  }
+
+  static async updateWarehouseValue(db) {
+    try {
+      await Products.updateWarehouseValue(db);
+
+      console.log("Statistiche aggiornate con successo");
+    } catch (error) {
+      console.error(
+        "Errore nel'aggiunta delle statistiche giornaliere:",
+        error
+      );
     }
   }
 

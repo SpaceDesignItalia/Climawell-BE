@@ -1,6 +1,7 @@
 // productsGET.js
 const express = require("express");
 const router = express.Router();
+const cron = require("node-cron");
 const ProductsController = require("../../Controllers/ProductsController");
 const authenticateMiddleware = require("../../middlewares/Services/Authentication/Authmiddleware");
 
@@ -42,7 +43,28 @@ const productsGET = (db) => {
   router.get("/SearchCategoryByName", authenticateMiddleware, (req, res) => {
     ProductsController.searchCategoryByName(req, res, db);
   });
+  router.get("/GetWarehouseStats", authenticateMiddleware, (req, res) => {
+    ProductsController.getWarehouseStats(req, res, db);
+  });
+  router.get("/GetCategoryStats", authenticateMiddleware, (req, res) => {
+    ProductsController.getCategoryStats(req, res, db);
+  });
+  router.get("/GetWarehouseValue", authenticateMiddleware, (req, res) => {
+    ProductsController.getWarehouseValue(req, res, db);
+  });
+  router.get("/GetWarehouseValueYear", authenticateMiddleware, (req, res) => {
+    ProductsController.getWarehouseValueYear(req, res, db);
+  });
+  router.get("/UpdateWarehouseValue", (req, res) => {
+    ProductsController.updateWarehouseValue(req, res, db);
+  });
 
+  cron.schedule("55 23 * * *", () => {
+    console.log("Aggiornamento del valore del magazzino in corso...");
+
+    // Esegui la funzione di aggiornamento
+    ProductsController.updateWarehouseValue(db); // Passa null per req e res se non li utilizzi
+  });
   return router;
 };
 

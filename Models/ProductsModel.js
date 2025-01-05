@@ -320,6 +320,87 @@ class ProductsModel {
     }
   }
 
+  static async getWarehouseStats(db) {
+    return new Promise((resolve, reject) => {
+      const query = `
+         SELECT 
+        (SELECT COUNT(*) FROM public."Product") AS "TotalProducts",
+        (SELECT COUNT(*) FROM public."Category") AS "TotalCategories",
+        (SELECT SUM("ProductAmount") FROM public."Product") AS "TotalPieces";
+      `;
+      db.query(query, (error, result) => {
+        if (error) {
+          reject(error);
+        }
+        resolve(result.rows[0]);
+      });
+    });
+  }
+
+  static async getCategoryStats(db) {
+    return new Promise((resolve, reject) => {
+      const query = `SELECT 
+        c."CategoryName", 
+        COUNT(p."ProductId") * 100.0 / (SELECT COUNT(*) FROM "Product") AS "Percentage"
+      FROM 
+        "Product" p
+      JOIN 
+        "Category" c ON p."CategoryId" = c."CategoryId"
+      GROUP BY 
+        c."CategoryName";`;
+      db.query(query, (error, result) => {
+        if (error) {
+          reject(error);
+        }
+        resolve(result.rows[0]);
+      });
+    });
+  }
+
+  static async getWarehouseValue(db) {
+    return new Promise((resolve, reject) => {
+      const query = `
+         SELECT 
+          SUM("ProductAmount" * "UnitPrice") AS "TotalValue"
+        FROM public."Product";`;
+      db.query(query, (error, result) => {
+        if (error) {
+          reject(error);
+        }
+        resolve(result.rows[0]);
+      });
+    });
+  }
+  static async getWarehouseValueYear(db) {
+    return new Promise((resolve, reject) => {
+      const query = `SELECT EXTRACT(YEAR FROM "Date") AS year, EXTRACT(MONTH FROM "Date") AS month, AVG("StockValue") AS "monthly_avg"
+      FROM public."WarehouseValue" WHERE EXTRACT(YEAR FROM "Date") = EXTRACT(YEAR FROM CURRENT_DATE)
+      GROUP BY year, month
+      ORDER BY year, month;`;
+
+      db.query(query, (error, result) => {
+        if (error) {
+          reject(error);
+        }
+        resolve(result.rows);
+      });
+    });
+  }
+
+  static async updateWarehouseValue(db) {
+    return new Promise((resolve, reject) => {
+      const query = `INSERT INTO public."WarehouseValue" ("StockValue")
+      VALUES ((SELECT SUM(p."ProductAmount" * p."UnitPrice") FROM public."Product" p));`;
+
+      db.query(query, (error, result) => {
+        if (error) {
+          reject(error);
+        }
+        resolve(result.rows);
+      });
+    });
+  }
+
   static addProduct(product, files, db) {
     return new Promise((resolve, reject) => {
       // Controlla se esiste un prodotto con lo stesso nome
