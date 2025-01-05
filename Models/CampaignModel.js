@@ -16,7 +16,7 @@ class CampaignModel {
 
   static GetAllWhatsappCampaigns(db) {
     return new Promise((resolve, reject) => {
-      const query = `SELECT "WhatsappCampaignId", "Title", "Date" FROM public."WhatsappCampaign" ORDER BY "WhatsappCampaignId" DESC;`;
+      const query = `SELECT * FROM public."WhatsappCampaign" ORDER BY "WhatsappCampaignId" DESC;`;
       db.query(query, (error, result) => {
         if (error) {
           reject(error);
