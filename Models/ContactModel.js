@@ -39,6 +39,7 @@ class ContactModel {
           }
 
           const emailExists = parseInt(result.rows[0].count) > 0;
+
           if (emailExists) {
             return reject(new Error("Esiste già un cliente con questa email."));
           }
@@ -182,6 +183,32 @@ class ContactModel {
       });
 
       resolve();
+    });
+  }
+
+  static DeletePrivateContact(db, CampaignToken) {
+    return new Promise((resolve, reject) => {
+      const query = `DELETE FROM public."Customer" WHERE "CampaignToken" = $1;`;
+
+      db.query(query, [CampaignToken], (error, result) => {
+        if (error) {
+          return reject(error);
+        }
+        resolve(result);
+      });
+    });
+  }
+
+  static DeleteCompanyContact(db, CampaignToken) {
+    return new Promise((resolve, reject) => {
+      const query = `DELETE FROM public."Company" WHERE "CampaignToken" = $1;`;
+
+      db.query(query, [CampaignToken], (error, result) => {
+        if (error) {
+          return reject(error);
+        }
+        resolve(result);
+      });
     });
   }
 }

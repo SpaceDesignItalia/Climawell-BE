@@ -97,17 +97,7 @@ class CampaignController {
       res.status(201).send("Campagna aggiunta con successo.");
     } catch (error) {
       console.error("Errore nell'aggiungere la campagna:", error);
-
-      // Gestione degli errori
-      if (
-        error.message === "Esiste già una campagna con questo nome." ||
-        error.message === "Esiste già una campagna con questo codice."
-      ) {
-        res.status(409).send("Esiste un'altra campagna con questi dati.");
-      } else {
-        // Altrimenti, restituisce un errore generico
-        res.status(500).send("Aggiunta della campagna fallita.");
-      }
+      res.status(500).send("Aggiunta della campagna fallita.");
     }
   }
 

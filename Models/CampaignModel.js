@@ -1,7 +1,10 @@
+const EmailService = require("../middlewares/EmailService/EmailService");
+const Messages = require("../middlewares/WhatsappBusiness/Messages");
+
 class CampaignModel {
   static GetAllEmailCampaigns(db) {
     return new Promise((resolve, reject) => {
-      const query = `SELECT "EmailCampaignId", "Title", "Date" FROM public."EmailCampaign";`;
+      const query = `SELECT * FROM public."EmailCampaign" ORDER BY "EmailCampaignId" DESC;`;
       db.query(query, (error, result) => {
         if (error) {
           reject(error);
@@ -13,7 +16,7 @@ class CampaignModel {
 
   static GetAllWhatsappCampaigns(db) {
     return new Promise((resolve, reject) => {
-      const query = `SELECT "WhatsappCampaignId", "Title", "Date" FROM public."WhatsappCampaign";`;
+      const query = `SELECT * FROM public."WhatsappCampaign" ORDER BY "WhatsappCampaignId" DESC;`;
       db.query(query, (error, result) => {
         if (error) {
           reject(error);
@@ -98,6 +101,24 @@ class CampaignModel {
           if (error) {
             reject(error);
           }
+
+          if (contactType === "private") {
+            EmailService.startPrivateCampaign(
+              campaignData.Description,
+              campaignData.Title,
+              campaignData.Object,
+              campaignImages[0].path,
+              db
+            );
+          } else {
+            EmailService.startCompanyCampaign(
+              campaignData.Description,
+              campaignData.Title,
+              campaignData.Object,
+              campaignImages[0].path,
+              db
+            );
+          }
           resolve(result.rows);
         });
       } else if (campaignType === "whatsapp") {
@@ -129,6 +150,14 @@ class CampaignModel {
 
           Promise.all(queries)
             .then((results) => {
+              if (contactType === "private") {
+                Messages.sendPrivateMessage(
+                  campaignData.Title,
+                  campaignData.Description,
+                  campaignImages[0].path,
+                  db
+                );
+              }
               resolve(results);
             })
             .catch((error) => {
