@@ -1,7 +1,7 @@
 class ContactModel {
   static GetAllPrivate(db) {
     return new Promise((resolve, reject) => {
-      const query = `SELECT "CustomerId", CONCAT("CustomerName", ' ', "CustomerSurname") AS "CustomerFullName", "CustomerEmail", "CustomerPhone", "PolicyAccepted" 
+      const query = `SELECT "CustomerId", CONCAT("CustomerName", ' ', "CustomerSurname") AS "CustomerFullName", "CustomerEmail", "CustomerPhone", "PolicyAccepted", "JConto"
       FROM public."Customer" ORDER BY "CustomerId" ASC `;
 
       db.query(query, (error, result) => {
@@ -119,14 +119,16 @@ class ContactModel {
         "CompanyName", 
         "CompanyEmail", 
         "CompanyPhone", 
-        "CompanyVAT"
-      ) VALUES ($1, $2, $3, 'test');`;
+        "CompanyVAT",
+        "JConto"
+      ) VALUES ($1, $2, $3, 'test', $4);`;
 
       companies.forEach((company) => {
         const values = [
           company.CompanyName,
           company.CompanyEmail,
           company.CompanyPhone,
+          company.JConto,
         ];
 
         // Elimina prima la riga esistente con lo stesso CompanyName
@@ -152,8 +154,9 @@ class ContactModel {
         "CustomerEmail", 
         "CustomerPhone", 
         "PolicyAccepted", 
-        "PolicyDocumentUrl"
-      ) VALUES ($1, $2, $3, $4, true, 'test');`;
+        "PolicyDocumentUrl",
+        "JConto"
+      ) VALUES ($1, $2, $3, $4, true, 'test', $5);`;
 
       customers.forEach((customer) => {
         const values = [
@@ -161,6 +164,7 @@ class ContactModel {
           customer.CustomerSurname,
           customer.CustomerEmail,
           customer.CustomerPhone,
+          customer.JConto,
         ];
 
         // Elimina prima la riga esistente con lo stesso CustomerName e CustomerSurname
