@@ -337,25 +337,29 @@ class ProductsModel {
     });
   }
 
-  static async getCategoryStats(db) {
-    return new Promise((resolve, reject) => {
-      const query = `SELECT 
+static async getCategoryStats(db) {
+  return new Promise((resolve, reject) => {
+    const query = `
+      SELECT 
         c."CategoryName", 
-        COUNT(p."ProductId") * 100.0 / (SELECT COUNT(*) FROM "Product") AS "Percentage"
+        ROUND(COUNT(p."ProductId") * 100.0 / (SELECT COUNT(*) FROM "Product"), 2) AS "Percentage"
       FROM 
         "Product" p
       JOIN 
         "Category" c ON p."CategoryId" = c."CategoryId"
       GROUP BY 
-        c."CategoryName";`;
-      db.query(query, (error, result) => {
-        if (error) {
-          reject(error);
-        }
-        resolve(result.rows[0]);
-      });
+        c."CategoryName"
+      ORDER BY 
+        "Percentage" DESC;`; // Ordina in base alla percentuale, opzionale
+    db.query(query, (error, result) => {
+      if (error) {
+        reject(error);
+      }
+      resolve(result.rows); // Restituisci tutte le righe
     });
-  }
+  });
+}
+
 
   static async getWarehouseValue(db) {
     return new Promise((resolve, reject) => {
