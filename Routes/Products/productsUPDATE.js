@@ -10,6 +10,9 @@ const productsUPDATE = (db) => {
   router.put("/UpdateCategory", authenticateMiddleware, (req, res) => {
     ProductsController.updateCategory(req, res, db);
   });
+  router.put("/UpdateProduct", authenticateMiddleware, (req, res) => {
+    ProductsController.updateProduct(req, res, db);
+  });
   return router; // Ritorna il router per consentire l'utilizzo da parte dell'app principale
 };
 

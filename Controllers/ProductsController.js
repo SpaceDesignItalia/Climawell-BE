@@ -42,13 +42,10 @@ class ProductsController {
   }
   static async getProductById(req, res, db) {
     try {
-      const ProductId = req.query.id;
+      const ProductId = req.query.ProductId;
       const product = await Products.getProductById(ProductId, db);
-      if (product) {
-        res.status(200).json(product);
-      } else {
-        res.status(500).send("Recupero del prodotto fallito");
-      }
+
+      res.status(200).json(product);
     } catch (error) {
       console.error("Errore nel recupero del prodotto:", error);
       res.status(500).send("Recupero del prodotto fallito");
@@ -335,6 +332,24 @@ class ProductsController {
     try {
       const CategoryId = req.body.CategoryId;
       const CategoryName = req.body.CategoryName;
+      await Products.updateCategory(CategoryId, CategoryName, db);
+
+      res.status(200).send("Categoria aggiornata con successo.");
+    } catch (error) {
+      if (error.status == 409) {
+        console.error("Errore nella modifica della categoria:", error);
+        res.status(409).send("Esiste un altra categoria con questo nome.");
+      } else {
+        console.error("Errore nella modifica della categoria:", error);
+        res.status(500).send("Modifica della categoria fallito");
+      }
+    }
+  }
+
+  static async updateProduct(req, res, db) {
+    try {
+      const ProductData = req.body.ProductData;
+      const file = req.files;
       await Products.updateCategory(CategoryId, CategoryName, db);
 
       res.status(200).send("Categoria aggiornata con successo.");

@@ -107,14 +107,14 @@ class ProductsModel {
             resolve(null);
           } else {
             const productData = result.rows[0];
-            const images = result.rows.map((row) => ({
+            const ProductImages = result.rows.map((row) => ({
               ProductImageId: row.ProductImageId,
               ProductImageUrl: row.ProductImageUrl,
             }));
 
             resolve({
               ...productData,
-              images,
+              ProductImages,
             });
           }
         }
