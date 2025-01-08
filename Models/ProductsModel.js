@@ -337,9 +337,9 @@ class ProductsModel {
     });
   }
 
-static async getCategoryStats(db) {
-  return new Promise((resolve, reject) => {
-    const query = `
+  static async getCategoryStats(db) {
+    return new Promise((resolve, reject) => {
+      const query = `
       SELECT 
         c."CategoryName", 
         ROUND(COUNT(p."ProductId") * 100.0 / (SELECT COUNT(*) FROM "Product"), 2) AS "Percentage"
@@ -351,15 +351,14 @@ static async getCategoryStats(db) {
         c."CategoryName"
       ORDER BY 
         "Percentage" DESC;`; // Ordina in base alla percentuale, opzionale
-    db.query(query, (error, result) => {
-      if (error) {
-        reject(error);
-      }
-      resolve(result.rows); // Restituisci tutte le righe
+      db.query(query, (error, result) => {
+        if (error) {
+          reject(error);
+        }
+        resolve(result.rows); // Restituisci tutte le righe
+      });
     });
-  });
-}
-
+  }
 
   static async getWarehouseValue(db) {
     return new Promise((resolve, reject) => {
@@ -569,40 +568,18 @@ static async getCategoryStats(db) {
   static deleteProduct(Product, db) {
     return new Promise(async (resolve, reject) => {
       try {
-        const imageQuery = `
-        SELECT "ProductImageUrl"
-        FROM "Productimage"
-        WHERE "ProductId" = $1;
-      `;
-        const imageResult = await db.query(imageQuery, [Product.ProductId]);
+        const selectFileToDeleteQuery = `SELECT * FROM "Productimage" WHERE "ProductId" = $1`;
 
-        const imageDeletePromises = imageResult.rows.map((image) => {
-          return new Promise((deleteResolve, deleteReject) => {
-            const filePath = path.join(
-              __dirname,
-              "..",
-              "public/uploads/ProductImages",
-              image.ProductImageUrl
-            );
-
-            console.log("File Path:", filePath);
-
-            if (fs.existsSync(filePath)) {
-              fs.unlink(filePath, (err) => {
-                if (err) {
-                  deleteReject(err);
-                } else {
-                  deleteResolve();
-                }
-              });
-            } else {
-              console.log("File does not exist:", filePath);
-              deleteResolve(); // Ignora file mancanti
+        db.query(
+          selectFileToDeleteQuery,
+          [Product.ProductId],
+          (selectFileToDeleteError, selectFileToDeleteResult) => {
+            if (selectFileToDeleteError) {
+              return reject(selectFileToDeleteError);
             }
-          });
-        });
-
-        await Promise.all(imageDeletePromises);
+            cleanUpFiles(selectFileToDeleteResult.rows);
+          }
+        );
 
         const deleteImagesQuery = `
         DELETE FROM "Productimage"
@@ -689,6 +666,169 @@ static async getCategoryStats(db) {
       );
     });
   }
+
+  static async updateProduct(productData, files, db) {
+    return new Promise((resolve, reject) => {
+      // Step 1: Update the product details
+      const updateQuery = `
+        UPDATE public."Product"
+        SET "ProductName" = $1,
+            "ProductDescription" = $2,
+            "ProductAmount" = $3,
+            "UnitPrice" = $4,
+            "Height" = $5,
+            "Width" = $6,
+            "Depth" = $7,
+            "Weight" = $8,
+            "CategoryId" = $9
+        WHERE "ProductId" = $10
+        RETURNING "ProductId";
+      `;
+
+      db.query(
+        updateQuery,
+        [
+          productData.ProductName,
+          productData.ProductDescription,
+          productData.ProductAmount,
+          productData.ProductPrice,
+          productData.ProductHeight,
+          productData.ProductWidth,
+          productData.ProductDepth,
+          productData.ProductWeight,
+          productData.CategoryId,
+          productData.ProductId,
+        ],
+        (updateError, updateResult) => {
+          if (updateError) {
+            cleanUpFiles(files);
+            return reject(updateError);
+          }
+
+          const productId = updateResult.rows[0].ProductId;
+
+          // Step 2: Update the featured status
+          const updateFeaturedQuery = `
+            DELETE FROM public."FeaturedProduct"
+            WHERE "ProductId" = $1;
+          `;
+
+          db.query(updateFeaturedQuery, [productId], (featuredError) => {
+            if (featuredError) {
+              cleanUpFiles(files);
+              return reject(featuredError);
+            }
+
+            if (productData.IsFeatured === "true") {
+              const insertFeaturedQuery = `
+                INSERT INTO public."FeaturedProduct"("ProductId")
+                VALUES ($1);
+              `;
+
+              db.query(insertFeaturedQuery, [productId], (insertError) => {
+                if (insertError) {
+                  cleanUpFiles(files);
+                  return reject(insertError);
+                }
+              });
+            }
+
+            // Verifica e conversione della stringa in array
+            if (typeof productData.OldImages === "string") {
+              try {
+                productData.OldImages = JSON.parse(productData.OldImages);
+              } catch (error) {
+                console.error("Errore durante il parsing di OldImages:", error);
+                productData.OldImages = []; // Inizializza come array vuoto in caso di errore
+              }
+            }
+
+            // Assicurati che sia un array anche dopo il parsing
+            if (!Array.isArray(productData.OldImages)) {
+              productData.OldImages = [];
+            }
+
+            // Generazione della query
+            const oldImageIds =
+              productData.OldImages.length > 0
+                ? productData.OldImages.join(",")
+                : null;
+
+            let selectFileToDeleteQuery;
+            if (oldImageIds) {
+              // Caso: ci sono ID da escludere
+              selectFileToDeleteQuery = `SELECT * FROM public."Productimage" WHERE "ProductId" = $1 AND "ProductImageId" NOT IN (${oldImageIds});`;
+            } else {
+              // Caso: nessun ID da escludere
+              selectFileToDeleteQuery = `SELECT * FROM public."Productimage" WHERE "ProductId" = $1`;
+            }
+            db.query(
+              selectFileToDeleteQuery,
+              [productId],
+              (selectFileToDeleteError, selectFileToDeleteResult) => {
+                if (selectFileToDeleteError) {
+                  return reject(selectFileToDeleteError);
+                }
+                cleanUpFiles(selectFileToDeleteResult.rows);
+              }
+            );
+
+            let updateImagesQuery;
+            if (oldImageIds) {
+              // Caso: ci sono ID da escludere
+              updateImagesQuery = `
+                DELETE FROM public."Productimage"
+                WHERE "ProductId" = $1 
+                AND "ProductImageId" NOT IN (${oldImageIds});
+              `;
+            } else {
+              // Caso: nessun ID da escludere
+              updateImagesQuery = `
+                DELETE FROM public."Productimage"
+                WHERE "ProductId" = $1;
+              `;
+            }
+
+            db.query(updateImagesQuery, [productId], (deleteImagesError) => {
+              if (deleteImagesError) {
+                return reject(deleteImagesError);
+              }
+
+              const insertImagesQuery = `
+                INSERT INTO public."Productimage"("ProductId", "ProductImageUrl")
+                VALUES ($1, $2);
+              `;
+
+              const imageInsertPromises = files.map((file) => {
+                return new Promise((imageResolve, imageReject) => {
+                  db.query(
+                    insertImagesQuery,
+                    [productId, file.filename],
+                    (imageError) => {
+                      if (imageError) {
+                        imageReject(imageError);
+                      } else {
+                        imageResolve();
+                      }
+                    }
+                  );
+                });
+              });
+
+              Promise.all(imageInsertPromises)
+                .then(() => {
+                  resolve({ productId });
+                })
+                .catch((imageError) => {
+                  cleanUpFiles(files);
+                  reject(imageError);
+                });
+            });
+          });
+        }
+      );
+    });
+  }
 }
 
 // Funzione di utilità per eliminare i file
@@ -698,7 +838,7 @@ function cleanUpFiles(files) {
       __dirname,
       "..",
       "public/uploads/ProductImages",
-      file.filename
+      file.ProductImageUrl
     );
     fs.unlink(filePath, (err) => {
       if (err) {

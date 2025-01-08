@@ -348,9 +348,10 @@ class ProductsController {
 
   static async updateProduct(req, res, db) {
     try {
-      const ProductData = req.body.ProductData;
+      const ProductData = req.body;
       const file = req.files;
-      await Products.updateCategory(CategoryId, CategoryName, db);
+      console.log("file: ", file);
+      await Products.updateProduct(ProductData, file, db);
 
       res.status(200).send("Categoria aggiornata con successo.");
     } catch (error) {
