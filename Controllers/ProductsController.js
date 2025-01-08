@@ -244,6 +244,7 @@ class ProductsController {
       await Products.updateWarehouseValue(db);
 
       console.log("Statistiche aggiornate con successo");
+      res.status(200).send("Statistiche aggiornate con successo");
     } catch (error) {
       console.error(
         "Errore nel'aggiunta delle statistiche giornaliere:",
@@ -258,6 +259,7 @@ class ProductsController {
       const files = req.files;
 
       await Products.addProduct(product, files, db);
+      res.status(200).send("Prodotto aggiunto con successo!");
     } catch (error) {
       console.error("Errore nell'aggiunta del prodotto:", error);
       // Se l'errore è relativo al nome duplicato, risponde con 409 Conflict

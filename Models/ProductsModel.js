@@ -577,7 +577,7 @@ class ProductsModel {
             if (selectFileToDeleteError) {
               return reject(selectFileToDeleteError);
             }
-            cleanUpFiles(selectFileToDeleteResult.rows);
+            cleanUpDBFiles(selectFileToDeleteResult.rows);
           }
         );
 
@@ -769,7 +769,7 @@ class ProductsModel {
                 if (selectFileToDeleteError) {
                   return reject(selectFileToDeleteError);
                 }
-                cleanUpFiles(selectFileToDeleteResult.rows);
+                cleanUpDBFiles(selectFileToDeleteResult.rows);
               }
             );
 
@@ -833,6 +833,26 @@ class ProductsModel {
 
 // Funzione di utilità per eliminare i file
 function cleanUpFiles(files) {
+  files.forEach((file) => {
+    console.log("Eliminazione del file:", file);
+    const filePath = path.resolve(
+      __dirname,
+      "..",
+      "public/uploads/ProductImages",
+      file.fileName
+    );
+    fs.unlink(filePath, (err) => {
+      if (err) {
+        console.error(
+          `Errore durante l'eliminazione del file: ${filePath}`,
+          err
+        );
+      }
+    });
+  });
+}
+
+function cleanUpDBFiles(files) {
   files.forEach((file) => {
     const filePath = path.resolve(
       __dirname,
