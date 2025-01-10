@@ -1,32 +1,14 @@
 const nodemailer = require("nodemailer");
 const fs = require("fs");
 const path = require("path");
-const ContactModel = require("../../models/ContactModel");
+const ContactModel = require("../../Models/ContactModel");
 
 const mailData = {
   mail: "noreply@spacedesign-italia.it",
-  pass: "@Gemellini04"
+  pass: "@Gemellini04",
 };
 
-// Configurazione DKIM opzionale
-let dkimConfig = null;
-try {
-  const privateKeyPath = path.join(__dirname, "private-key.pem");
-  if (fs.existsSync(privateKeyPath)) {
-    dkimConfig = {
-      domainName: "spacedesign-italia.it",
-      keySelector: "default",
-      privateKey: fs.readFileSync(privateKeyPath, "utf8")
-    };
-    console.log("DKIM configurato correttamente");
-  } else {
-    console.log("File private-key.pem non trovato. DKIM non sarà utilizzato.");
-  }
-} catch (error) {
-  console.warn("Errore nella configurazione DKIM:", error.message);
-}
-
-const transporterConfig = {
+const transporter = nodemailer.createTransport({
   host: "smtp.ionos.it",
   port: 587,
   secure: false,
@@ -34,45 +16,25 @@ const transporterConfig = {
     user: mailData.mail,
     pass: mailData.pass,
   },
-  pool: true,
-  maxConnections: 5,
-  rateDelta: 1000,
-  rateLimit: 5,
-};
-
-// Aggiungi la configurazione DKIM solo se disponibile
-if (dkimConfig) {
-  transporterConfig.dkim = {
-    domainName: dkimConfig.domainName,
-    keySelector: dkimConfig.keySelector,
-    privateKey: dkimConfig.privateKey,
-    headerFieldNames: 'from:to:subject:date:message-id:mime-version:content-type',
-    skipFields: 'list-unsubscribe:list-unsubscribe-post',
-  };
-}
-
-const transporter = nodemailer.createTransport(transporterConfig);
+});
 
 function generateTextVersion(params) {
   return `
-Climawell SRL - Comunicazione Importante
+Climawell SRL
 
 Gentile ${params.name},
 
 ${params.description}
 
-Per gestire le tue preferenze email o cancellarti dalla newsletter:
+Per gestire le tue preferenze di comunicazione, visita:
 ${params.link}
 
---
+---
+
 Climawell SRL
-Via [Indirizzo Aziendale]
-Tel: [Numero Telefono]
-Email: info@climawell.net
 www.climawell.net
 
 © ${new Date().getFullYear()} Climawell SRL. Tutti i diritti riservati.
-Questa email è stata inviata a ${params.email} perché ti sei iscritto alla nostra newsletter.
 `.trim();
 }
 
@@ -84,36 +46,31 @@ class EmailService {
 
       const emailTemplatePath = path.join(__dirname, "EmailTemplate/PrivateCampaign.html");
       const emailTemplate = fs.readFileSync(emailTemplatePath, "utf-8");
-      
-      const domainName = dkimConfig ? dkimConfig.domainName : "climawell.net";
-      const bounceAddress = `bounce-${Date.now()}@${domainName}`;
-      
+      const imageId = `image-${Date.now()}`;
+
       const sendEmail = async (contact) => {
         try {
           const name = contact.CustomerFullName?.split(" ")[0] || "";
           const email = contact.CustomerEmail;
-          
-          const messageId = `<${Date.now()}.${Math.random().toString(36).substring(2)}@${domainName}>`;
-          
+
           const token = [...Array(8)]
-            .map(() => (Math.random().toString(36) + "ABCDEFGHIJKLMNOPQRSTUVWXYZ").charAt(Math.floor(Math.random() * 36)))
+            .map(() => (Math.random().toString(36) + "ABCDEFGHIJKLMNOPQRSTUVWXYZ!@#$%^&*()").charAt(Math.floor(Math.random() * 62)))
             .join("");
 
           const unsubscribeUrl = new URL(`/contacts/remove-private/${token}/`, process.env.FRONTEND_URL).toString();
-          const unsubscribeEmail = `unsubscribe@${domainName}`;
 
+          // Generate matching text version
           const textContent = generateTextVersion({
             name,
             description,
-            link: unsubscribeUrl,
-            email: email
+            link: unsubscribeUrl
           });
 
           const htmlContent = emailTemplate
             .replace(/\${name}/g, name)
             .replace(/\${description}/g, description)
             .replace(/\${link}/g, unsubscribeUrl)
-            .replace(/\${image}/g, `cid:${messageId}-image`);
+            .replace(/\${image}/g, `cid:${imageId}`);
 
           const emailOptions = {
             from: {
@@ -128,55 +85,124 @@ class EmailService {
               {
                 filename: path.basename(imagePath),
                 path: imagePath,
-                cid: `${messageId}-image`,
+                cid: imageId,
               },
             ],
-            messageId: messageId,
             headers: {
-              'X-Entity-Ref-ID': messageId,
-              'X-Mailer': 'Climawell Mailer v1.0',
-              'List-Unsubscribe': `<${unsubscribeUrl}>, <mailto:${unsubscribeEmail}?subject=unsubscribe>`,
-              'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
-              'Feedback-ID': `private:${token}:${domainName}`,
-              'Return-Path': bounceAddress,
-              'X-Report-Abuse': `Please report abuse to abuse@${domainName}`,
-              'X-Priority': '3',
-              'Precedence': 'bulk',
-              'Auto-Submitted': 'auto-generated'
-            },
-            priority: 'normal',
-            encoding: 'quoted-printable',
-            disableFileAccess: true,
-            disableUrlAccess: true,
+              'X-Entity-Ref-ID': `private-${Date.now()}-${token}`,
+              'List-Unsubscribe': `<${unsubscribeUrl}>`,
+              'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click'
+            }
           };
 
-          await new Promise(resolve => setTimeout(resolve, Math.random() * 1000));
-          
           await transporter.sendMail(emailOptions);
           await db.query(
-            `UPDATE public."Customer" SET "CampaignToken" = $1, "LastEmailSent" = NOW() WHERE "CustomerEmail" = $2;`,
+            `UPDATE public."Customer" SET "CampaignToken" = $1 WHERE "CustomerEmail" = $2;`,
             [token, email]
           );
-          
-          console.log(`Email inviata con successo a ${email} (Message-ID: ${messageId})`);
+          console.log(`Email privata inviata con successo a ${email}`);
         } catch (error) {
-          console.error(`Errore nell'invio dell'email a ${email}:`, error);
+          console.error(`Errore nell'invio dell'email privata a ${email}:`, error);
         }
       };
 
-      const batchSize = 20;
+      // Process in batches of 50
+      const batchSize = 50;
       for (let i = 0; i < contacts.length; i += batchSize) {
         const batch = contacts.slice(i, i + batchSize);
         await Promise.all(batch.map(sendEmail));
         if (i + batchSize < contacts.length) {
-          await new Promise(resolve => setTimeout(resolve, 5000));
+          await new Promise(resolve => setTimeout(resolve, 1000));
         }
       }
     } catch (error) {
-      console.error("Errore durante la campagna:", error);
+      console.error("Errore durante la campagna privata:", error);
+      throw error;
+    }
+  }
+
+  static async startCompanyCampaign(description, title, object, imagePath, db) {
+    try {
+      const companies = await ContactModel.GetAllCompany(db);
+      if (!companies?.length) return;
+
+      const emailTemplatePath = path.join(__dirname, "EmailTemplate/CompanyCampaign.html");
+      const emailTemplate = fs.readFileSync(emailTemplatePath, "utf-8");
+      const imageId = `image-${Date.now()}`;
+
+      const sendEmail = async (company) => {
+        try {
+          const name = company.CompanyName || "";
+          const email = company.CompanyEmail;
+
+          const token = [...Array(8)]
+            .map(() => (Math.random().toString(36) + "ABCDEFGHIJKLMNOPQRSTUVWXYZ!@#$%^&*()").charAt(Math.floor(Math.random() * 62)))
+            .join("");
+
+          const unsubscribeUrl = new URL(`/contacts/remove-company/${token}/`, process.env.FRONTEND_URL).toString();
+
+          // Generate matching text version for companies
+          const textContent = generateTextVersion({
+            name,
+            description,
+            link: unsubscribeUrl
+          });
+
+          const htmlContent = emailTemplate
+            .replace(/\${name}/g, name)
+            .replace(/\${description}/g, description)
+            .replace(/\${link}/g, unsubscribeUrl)
+            .replace(/\${image}/g, `cid:${imageId}`);
+
+          const emailOptions = {
+            from: {
+              name: "Climawell SRL",
+              address: mailData.mail,
+            },
+            to: email,
+            subject: title,
+            text: textContent,
+            html: htmlContent,
+            attachments: [
+              {
+                filename: path.basename(imagePath),
+                path: imagePath,
+                cid: imageId,
+              },
+            ],
+            headers: {
+              'X-Entity-Ref-ID': `company-${Date.now()}-${token}`,
+              'List-Unsubscribe': `<${unsubscribeUrl}>`,
+              'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click'
+            }
+          };
+
+          await transporter.sendMail(emailOptions);
+          await db.query(
+            `UPDATE public."Company" SET "CampaignToken" = $1 WHERE "CompanyEmail" = $2;`,
+            [token, email]
+          );
+          console.log(`Email aziendale inviata con successo a ${email}`);
+        } catch (error) {
+          console.error(`Errore nell'invio dell'email aziendale a ${email}:`, error);
+        }
+      };
+
+      // Process in batches of 50
+      const batchSize = 50;
+      for (let i = 0; i < companies.length; i += batchSize) {
+        const batch = companies.slice(i, i + batchSize);
+        await Promise.all(batch.map(sendEmail));
+        if (i + batchSize < companies.length) {
+          await new Promise(resolve => setTimeout(resolve, 1000));
+        }
+      }
+    } catch (error) {
+      console.error("Errore durante la campagna aziendale:", error);
       throw error;
     }
   }
 }
 
 module.exports = EmailService;
+
