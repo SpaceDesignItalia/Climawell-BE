@@ -120,8 +120,11 @@ class ContactModel {
         "CompanyEmail", 
         "CompanyPhone", 
         "CompanyVAT",
-        "JConto"
-      ) VALUES ($1, $2, $3, 'test', $4);`;
+        "JConto",
+        "Cap",
+        "Citta",
+        "Provincia"
+      ) VALUES ($1, $2, $3, 'test', $4, $5, $6, $7);`;
 
       companies.forEach((company) => {
         const values = [
@@ -129,6 +132,9 @@ class ContactModel {
           company.CompanyEmail,
           company.CompanyPhone,
           company.JConto,
+          company.Cap,
+          company.Citta,
+          company.Provincia,
         ];
 
         // Elimina prima la riga esistente con lo stesso CompanyName
@@ -155,8 +161,11 @@ class ContactModel {
         "CustomerPhone", 
         "PolicyAccepted", 
         "PolicyDocumentUrl",
-        "JConto"
-      ) VALUES ($1, $2, $3, $4, true, 'test', $5);`;
+        "JConto",
+        "Cap",
+        "Citta",
+        "Provincia"
+      ) VALUES ($1, $2, $3, $4, true, 'test', $5, $6, $7, $8);`;
 
       customers.forEach((customer) => {
         const values = [
@@ -165,6 +174,9 @@ class ContactModel {
           customer.CustomerEmail,
           customer.CustomerPhone,
           customer.JConto,
+          customer.Cap,
+          customer.Citta,
+          customer.Provincia,
         ];
 
         // Elimina prima la riga esistente con lo stesso CustomerName e CustomerSurname
