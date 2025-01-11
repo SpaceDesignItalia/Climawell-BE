@@ -159,6 +159,7 @@ class CampaignModel {
                   campaignData.Title,
                   campaignData.Description,
                   campaignImages[0].path,
+                  Cap,
                   db
                 );
               }
