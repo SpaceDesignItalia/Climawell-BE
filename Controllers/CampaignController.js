@@ -75,6 +75,7 @@ class CampaignController {
       const CampaignType = req.body.CampaignType;
       const ContactType = req.body.ContactType;
       const CampaignImages = req.files;
+      const Cap = req.body.Cap;
       let CampaignData;
 
       if (CampaignType == "email") {
@@ -91,7 +92,8 @@ class CampaignController {
         JSON.parse(CampaignData),
         CampaignType,
         ContactType,
-        CampaignImages
+        CampaignImages,
+        Cap
       );
 
       res.status(201).send("Campagna aggiunta con successo.");

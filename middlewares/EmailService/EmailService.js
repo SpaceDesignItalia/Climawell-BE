@@ -39,12 +39,25 @@ www.climawell.net
 }
 
 class EmailService {
-  static async startPrivateCampaign(description, title, object, imagePath, db) {
+  static async startPrivateCampaign(
+    description,
+    title,
+    object,
+    imagePath,
+    cap,
+    db
+  ) {
     try {
-      const contacts = await ContactModel.GetAllPrivate(db);
+      const contacts = await ContactModel.GetPrivatesByCap(cap, db);
+
+      console.log(contacts);
+
       if (!contacts?.length) return;
 
-      const emailTemplatePath = path.join(__dirname, "EmailTemplate/PrivateCampaign.html");
+      const emailTemplatePath = path.join(
+        __dirname,
+        "EmailTemplate/PrivateCampaign.html"
+      );
       const emailTemplate = fs.readFileSync(emailTemplatePath, "utf-8");
       const imageId = `image-${Date.now()}`;
 
@@ -54,16 +67,24 @@ class EmailService {
           const email = contact.CustomerEmail;
 
           const token = [...Array(8)]
-            .map(() => (Math.random().toString(36) + "ABCDEFGHIJKLMNOPQRSTUVWXYZ!@#$%^&*()").charAt(Math.floor(Math.random() * 62)))
+            .map(() =>
+              (
+                Math.random().toString(36) +
+                "ABCDEFGHIJKLMNOPQRSTUVWXYZ!@#$%^&*()"
+              ).charAt(Math.floor(Math.random() * 62))
+            )
             .join("");
 
-          const unsubscribeUrl = new URL(`/contacts/remove-private/${token}/`, process.env.FRONTEND_URL).toString();
+          const unsubscribeUrl = new URL(
+            `/contacts/remove-private/${token}/`,
+            process.env.FRONTEND_URL
+          ).toString();
 
           // Generate matching text version
           const textContent = generateTextVersion({
             name,
             description,
-            link: unsubscribeUrl
+            link: unsubscribeUrl,
           });
 
           const htmlContent = emailTemplate
@@ -89,10 +110,10 @@ class EmailService {
               },
             ],
             headers: {
-              'X-Entity-Ref-ID': `private-${Date.now()}-${token}`,
-              'List-Unsubscribe': `<${unsubscribeUrl}>`,
-              'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click'
-            }
+              "X-Entity-Ref-ID": `private-${Date.now()}-${token}`,
+              "List-Unsubscribe": `<${unsubscribeUrl}>`,
+              "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+            },
           };
 
           await transporter.sendMail(emailOptions);
@@ -102,7 +123,10 @@ class EmailService {
           );
           console.log(`Email privata inviata con successo a ${email}`);
         } catch (error) {
-          console.error(`Errore nell'invio dell'email privata a ${email}:`, error);
+          console.error(
+            `Errore nell'invio dell'email privata a ${email}:`,
+            error
+          );
         }
       };
 
@@ -112,7 +136,7 @@ class EmailService {
         const batch = contacts.slice(i, i + batchSize);
         await Promise.all(batch.map(sendEmail));
         if (i + batchSize < contacts.length) {
-          await new Promise(resolve => setTimeout(resolve, 1000));
+          await new Promise((resolve) => setTimeout(resolve, 1000));
         }
       }
     } catch (error) {
@@ -121,12 +145,23 @@ class EmailService {
     }
   }
 
-  static async startCompanyCampaign(description, title, object, imagePath, db) {
+  static async startCompanyCampaign(
+    description,
+    title,
+    object,
+    imagePath,
+    cap,
+    db
+  ) {
     try {
-      const companies = await ContactModel.GetAllCompany(db);
+      const companies = await ContactModel.GetCompaniesByCap(cap, db);
+
       if (!companies?.length) return;
 
-      const emailTemplatePath = path.join(__dirname, "EmailTemplate/CompanyCampaign.html");
+      const emailTemplatePath = path.join(
+        __dirname,
+        "EmailTemplate/CompanyCampaign.html"
+      );
       const emailTemplate = fs.readFileSync(emailTemplatePath, "utf-8");
       const imageId = `image-${Date.now()}`;
 
@@ -136,16 +171,24 @@ class EmailService {
           const email = company.CompanyEmail;
 
           const token = [...Array(8)]
-            .map(() => (Math.random().toString(36) + "ABCDEFGHIJKLMNOPQRSTUVWXYZ!@#$%^&*()").charAt(Math.floor(Math.random() * 62)))
+            .map(() =>
+              (
+                Math.random().toString(36) +
+                "ABCDEFGHIJKLMNOPQRSTUVWXYZ!@#$%^&*()"
+              ).charAt(Math.floor(Math.random() * 62))
+            )
             .join("");
 
-          const unsubscribeUrl = new URL(`/contacts/remove-company/${token}/`, process.env.FRONTEND_URL).toString();
+          const unsubscribeUrl = new URL(
+            `/contacts/remove-company/${token}/`,
+            process.env.FRONTEND_URL
+          ).toString();
 
           // Generate matching text version for companies
           const textContent = generateTextVersion({
             name,
             description,
-            link: unsubscribeUrl
+            link: unsubscribeUrl,
           });
 
           const htmlContent = emailTemplate
@@ -171,10 +214,10 @@ class EmailService {
               },
             ],
             headers: {
-              'X-Entity-Ref-ID': `company-${Date.now()}-${token}`,
-              'List-Unsubscribe': `<${unsubscribeUrl}>`,
-              'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click'
-            }
+              "X-Entity-Ref-ID": `company-${Date.now()}-${token}`,
+              "List-Unsubscribe": `<${unsubscribeUrl}>`,
+              "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+            },
           };
 
           await transporter.sendMail(emailOptions);
@@ -184,7 +227,10 @@ class EmailService {
           );
           console.log(`Email aziendale inviata con successo a ${email}`);
         } catch (error) {
-          console.error(`Errore nell'invio dell'email aziendale a ${email}:`, error);
+          console.error(
+            `Errore nell'invio dell'email aziendale a ${email}:`,
+            error
+          );
         }
       };
 
@@ -194,7 +240,7 @@ class EmailService {
         const batch = companies.slice(i, i + batchSize);
         await Promise.all(batch.map(sendEmail));
         if (i + batchSize < companies.length) {
-          await new Promise(resolve => setTimeout(resolve, 1000));
+          await new Promise((resolve) => setTimeout(resolve, 1000));
         }
       }
     } catch (error) {
@@ -205,4 +251,3 @@ class EmailService {
 }
 
 module.exports = EmailService;
-

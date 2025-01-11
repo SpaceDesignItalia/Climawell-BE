@@ -81,8 +81,10 @@ class CampaignModel {
     campaignData,
     campaignType,
     contactType,
-    campaignImages
+    campaignImages,
+    Cap
   ) {
+    console.log(campaignData);
     return new Promise((resolve, reject) => {
       if (campaignType === "email") {
         const query = `INSERT INTO public."EmailCampaign"(
@@ -108,6 +110,7 @@ class CampaignModel {
               campaignData.Title,
               campaignData.Object,
               campaignImages[0].path,
+              Cap,
               db
             );
           } else {
@@ -116,6 +119,7 @@ class CampaignModel {
               campaignData.Title,
               campaignData.Object,
               campaignImages[0].path,
+              Cap,
               db
             );
           }

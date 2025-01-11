@@ -15,6 +15,10 @@ const contactGET = (db) => {
     ContactController.GetAllCompany(res, db);
   });
 
+  router.get("/GetAllCaps", authenticateMiddleware, (req, res) => {
+    ContactController.GetAllCaps(res, db);
+  });
+
   return router; // Ritorna il router per consentire l'utilizzo da parte dell'app principale
 };
 
