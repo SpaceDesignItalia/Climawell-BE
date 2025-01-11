@@ -1,8 +1,7 @@
 class ContactModel {
   static GetAllPrivate(db) {
     return new Promise((resolve, reject) => {
-      const query = `SELECT "CustomerId", CONCAT("CustomerName", ' ', "CustomerSurname") AS "CustomerFullName", "CustomerEmail", "CustomerPhone", "PolicyAccepted", "JConto"
-      FROM public."Customer" ORDER BY "CustomerId" ASC `;
+      const query = `SELECT "CustomerId", CONCAT("CustomerName", ' ', "CustomerSurname") AS "CustomerFullName", "CustomerEmail", "CustomerPhone", "PolicyAccepted", "JConto", "Cap" FROM public."Customer" ORDER BY "CustomerId" ASC `;
 
       db.query(query, (error, result) => {
         if (error) {
@@ -121,10 +120,8 @@ class ContactModel {
         "CompanyPhone", 
         "CompanyVAT",
         "JConto",
-        "Cap",
-        "Citta",
-        "Provincia"
-      ) VALUES ($1, $2, $3, 'test', $4, $5, $6, $7);`;
+        "Cap"
+      ) VALUES ($1, $2, $3, 'test', $4, $5);`;
 
       companies.forEach((company) => {
         const values = [
@@ -133,8 +130,6 @@ class ContactModel {
           company.CompanyPhone,
           company.JConto,
           company.Cap,
-          company.Citta,
-          company.Provincia,
         ];
 
         // Elimina prima la riga esistente con lo stesso CompanyName
@@ -162,10 +157,8 @@ class ContactModel {
         "PolicyAccepted", 
         "PolicyDocumentUrl",
         "JConto",
-        "Cap",
-        "Citta",
-        "Provincia"
-      ) VALUES ($1, $2, $3, $4, true, 'test', $5, $6, $7, $8);`;
+        "Cap"
+      ) VALUES ($1, $2, $3, $4, true, 'test', $5, $6);`;
 
       customers.forEach((customer) => {
         const values = [
@@ -175,8 +168,6 @@ class ContactModel {
           customer.CustomerPhone,
           customer.JConto,
           customer.Cap,
-          customer.Citta,
-          customer.Provincia,
         ];
 
         // Elimina prima la riga esistente con lo stesso CustomerName e CustomerSurname
@@ -224,6 +215,66 @@ class ContactModel {
           return reject(error);
         }
         resolve(result);
+      });
+    });
+  }
+
+  static GetAllCaps(db) {
+    return new Promise((resolve, reject) => {
+      const query = `SELECT DISTINCT "Cap" FROM public."Customer" ORDER BY "Cap" ASC;`;
+      const queryCompany = `SELECT DISTINCT "Cap" FROM public."Company" ORDER BY "Cap" ASC;`;
+
+      db.query(queryCompany, (error, resultCompany) => {
+        if (error) {
+          return reject(error);
+        }
+
+        db.query(query, (error, resultCustomer) => {
+          if (error) {
+            return reject(error);
+          }
+
+          const caps = new Set([
+            ...resultCompany.rows.map((row) => row.Cap),
+            ...resultCustomer.rows.map((row) => row.Cap),
+          ]);
+
+          const capObjects = Array.from(caps)
+            .sort()
+            .map((cap) => ({ Cap: cap }));
+
+          resolve(capObjects);
+        });
+      });
+    });
+  }
+
+  static GetPrivatesByCap(cap, db) {
+    return new Promise((resolve, reject) => {
+      const query = `SELECT "CustomerId", CONCAT("CustomerName", ' ', "CustomerSurname") AS "CustomerFullName", "CustomerEmail", "CustomerPhone", "PolicyAccepted", "JConto", "Cap" FROM public."Customer" 
+      WHERE "Cap" = $1
+      ORDER BY "CustomerId" ASC `;
+
+      db.query(query, [cap], (error, result) => {
+        if (error) {
+          reject(error);
+        }
+        resolve(result.rows);
+      });
+    });
+  }
+
+  static GetCompaniesByCap(cap, db) {
+    return new Promise((resolve, reject) => {
+      const query = `SELECT * FROM public."Company" 
+      WHERE "Cap" = $1
+      ORDER BY "CompanyId" ASC `;
+
+      db.query(query, [cap], (error, result) => {
+        if (error) {
+          reject(error);
+        }
+        resolve(result.rows);
       });
     });
   }

@@ -4,13 +4,13 @@ require("dotenv").config();
 const fs = require("fs");
 
 class Messages {
-  static async sendPrivateMessage(title, description, imagePath, db) {
+  static async sendPrivateMessage(title, description, imagePath, cap, db) {
     console.log("Inizio l'invio dei messaggi privati.");
     // Carica l'immagine richiesta
     const imageId = await uploadImage(imagePath);
 
     // Ottieni tutti i contatti privati dal database
-    const contacts = await ContactModel.GetAllPrivate(db);
+    const contacts = await ContactModel.GetPrivatesByCap(cap, db);
 
     // Itera su ciascun contatto
     for (const contact of contacts) {

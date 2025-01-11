@@ -87,6 +87,15 @@ class ContactController {
       res.status(500).send("Eliminazione dell'azienda fallita.");
     }
   }
+
+  static async GetAllCaps(res, db) {
+    try {
+      const caps = await ContactModel.GetAllCaps(db);
+      res.status(200).json(caps);
+    } catch (error) {
+      console.error("Errore nell'recuperare i CAP:", error);
+    }
+  }
 }
 
 module.exports = ContactController;
