@@ -2,45 +2,36 @@ class ContactModel {
   static GetAllPrivate(isPremium, db) {
     console.log("isPremium", isPremium);
     return new Promise((resolve, reject) => {
-      if (isPremium) {
-        console.log("isPremium", isPremium);
-        const query = `SELECT "CustomerId", CONCAT("CustomerName", ' ', "CustomerSurname") AS "CustomerFullName", "CustomerEmail", "CustomerPhone", "PolicyAccepted", "JConto", "Cap" FROM public."Customer" 
-        WHERE "IsPremium" = true
-        ORDER BY "CustomerId" ASC `;
-        db.query(query, (error, result) => {
-          if (error) {
-            reject(error);
-          }
-          resolve(result.rows);
-          return;
-        });
-      }
-      console.log("notisPremium", isPremium);
-      const query = `SELECT "CustomerId", CONCAT("CustomerName", ' ', "CustomerSurname") AS "CustomerFullName", "CustomerEmail", "CustomerPhone", "PolicyAccepted", "JConto", "Cap" FROM public."Customer" ORDER BY "CustomerId" ASC `;
-
-      db.query(query, (error, result) => {
+      console.log("isPremium", isPremium);
+      const query = `SELECT "CustomerId", 
+       CONCAT("CustomerName", ' ', "CustomerSurname") AS "CustomerFullName", 
+       "CustomerEmail", 
+       "CustomerPhone", 
+       "PolicyAccepted", 
+       "JConto", 
+       "Cap" 
+        FROM public."Customer"
+        WHERE ($1 = true AND "IsPremium" = true) OR ($1 = false)
+        ORDER BY "CustomerId" ASC;
+        `;
+      db.query(query, [isPremium], (error, result) => {
         if (error) {
           reject(error);
         }
         resolve(result.rows);
+        return;
       });
     });
   }
 
   static GetAllCompany(isPremium, db) {
     return new Promise((resolve, reject) => {
-      if (isPremium) {
-        const query = `SELECT * FROM public."Company" WHERE "IsPremium" = true ORDER BY "CompanyId" ASC `;
-        db.query(query, (error, result) => {
-          if (error) {
-            reject(error);
-          }
-          resolve(result.rows);
-        });
-      }
-      const query = `SELECT * FROM public."Company" ORDER BY "CompanyId" ASC `;
-
-      db.query(query, (error, result) => {
+      const query = `SELECT * 
+      FROM public."Company" 
+      WHERE ($1 = true AND "IsPremium" = true) OR ($1 = false)
+      ORDER BY "CompanyId" ASC;
+      `;
+      db.query(query, [isPremium], (error, result) => {
         if (error) {
           reject(error);
         }
@@ -271,7 +262,10 @@ class ContactModel {
             .sort()
             .map((cap) => ({ Cap: cap }));
 
-          resolve(capObjects);
+          const filteredCaps = capObjects.filter(
+            (cap) => cap.Cap !== null && cap.Cap !== ""
+          );
+          resolve(filteredCaps);
         });
       });
     });
