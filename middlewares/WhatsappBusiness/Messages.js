@@ -19,7 +19,7 @@ class Messages {
 
       try {
         const response = await axios({
-          url: "https://graph.facebook.com/v21.0/442911372232023/messages",
+          url: "https://graph.facebook.com/v21.0/522369940963643/messages",
           method: "post",
           headers: {
             Authorization: `Bearer ${process.env.WHATSAPP_TOKEN}`,
@@ -30,7 +30,7 @@ class Messages {
             to: "39" + phoneNumber, // Prefisso italiano e numero di telefono
             type: "template",
             template: {
-              name: "climawell_marketing_ufficiale",
+              name: "climawellm",
               language: {
                 code: "it",
               },
@@ -94,7 +94,7 @@ async function uploadImage(imagePath) {
 
   try {
     const response = await axios({
-      url: "https://graph.facebook.com/v21.0/442911372232023/media",
+      url: "https://graph.facebook.com/v21.0/522369940963643/media",
       method: "post",
       headers: {
         Authorization: `Bearer ${process.env.WHATSAPP_TOKEN}`,

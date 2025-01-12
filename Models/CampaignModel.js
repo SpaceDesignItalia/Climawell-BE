@@ -155,6 +155,7 @@ class CampaignModel {
           Promise.all(queries)
             .then((results) => {
               if (contactType === "private") {
+                console.log("Sending private campaign");
                 Messages.sendPrivateMessage(
                   campaignData.Title,
                   campaignData.Description,
