@@ -8,11 +8,11 @@ const contactGET = (db) => {
   // Definisci le route POST qui
 
   router.get("/GetAllPrivate", authenticateMiddleware, (req, res) => {
-    ContactController.GetAllPrivate(res, db);
+    ContactController.GetAllPrivate(req, res, db);
   });
 
   router.get("/GetAllCompany", authenticateMiddleware, (req, res) => {
-    ContactController.GetAllCompany(res, db);
+    ContactController.GetAllCompany(req, res, db);
   });
 
   router.get("/GetAllCaps", authenticateMiddleware, (req, res) => {

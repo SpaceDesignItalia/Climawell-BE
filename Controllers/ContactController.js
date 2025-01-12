@@ -2,8 +2,9 @@
 const ContactModel = require("../Models/ContactModel");
 
 class ContactController {
-  static async GetAllPrivate(res, db) {
+  static async GetAllPrivate(req, res, db) {
     try {
+      const isPremium = req.body.isPremium();
       const contacts = await ContactModel.GetAllPrivate(db);
       res.status(200).json(contacts);
     } catch (error) {
