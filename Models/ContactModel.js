@@ -74,8 +74,9 @@ class ContactModel {
             "CustomerEmail", 
             "CustomerPhone", 
             "PolicyAccepted", 
-            "PolicyDocumentUrl"
-          ) VALUES ($1, $2, $3, $4, $5, $6);`;
+            "PolicyDocumentUrl",
+            "IsPremium"
+          ) VALUES ($1, $2, $3, $4, $5, $6, $7);`;
           const values = [
             ContactData.CustomerName,
             ContactData.CustomerSurname,
@@ -83,6 +84,7 @@ class ContactModel {
             ContactData.CustomerPhone,
             ContactData.PolicyAccepted,
             PrivacyFile,
+            ContactData.isPremium ? true : false,
           ];
 
           db.query(query, values, (error, result) => {
@@ -114,13 +116,15 @@ class ContactModel {
             "CompanyName", 
             "CompanyEmail", 
             "CompanyPhone", 
-            "CompanyVAT"
-          ) VALUES ($1, $2, $3, $4);`;
+            "CompanyVAT",
+            "IsPremium"
+          ) VALUES ($1, $2, $3, $4, $5);`;
           const values = [
             ContactData.CompanyName,
             ContactData.CompanyEmail,
             ContactData.CompanyPhone,
             ContactData.CompanyVAT,
+            ContactData.isPremium ? true : false,
           ];
 
           db.query(query, values, (error, result) => {
