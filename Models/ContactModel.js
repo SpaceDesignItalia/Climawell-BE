@@ -1,7 +1,9 @@
 class ContactModel {
   static GetAllPrivate(isPremium, db) {
+    console.log("isPremium", isPremium);
     return new Promise((resolve, reject) => {
       if (isPremium) {
+        console.log("isPremium", isPremium);
         const query = `SELECT "CustomerId", CONCAT("CustomerName", ' ', "CustomerSurname") AS "CustomerFullName", "CustomerEmail", "CustomerPhone", "PolicyAccepted", "JConto", "Cap" FROM public."Customer" 
         WHERE "IsPremium" = true
         ORDER BY "CustomerId" ASC `;
@@ -10,8 +12,10 @@ class ContactModel {
             reject(error);
           }
           resolve(result.rows);
+          return;
         });
       }
+      console.log("notisPremium", isPremium);
       const query = `SELECT "CustomerId", CONCAT("CustomerName", ' ', "CustomerSurname") AS "CustomerFullName", "CustomerEmail", "CustomerPhone", "PolicyAccepted", "JConto", "Cap" FROM public."Customer" ORDER BY "CustomerId" ASC `;
 
       db.query(query, (error, result) => {
