@@ -1,6 +1,17 @@
 class ContactModel {
-  static GetAllPrivate(db) {
+  static GetAllPrivate(isPremium, db) {
     return new Promise((resolve, reject) => {
+      if (isPremium) {
+        const query = `SELECT "CustomerId", CONCAT("CustomerName", ' ', "CustomerSurname") AS "CustomerFullName", "CustomerEmail", "CustomerPhone", "PolicyAccepted", "JConto", "Cap" FROM public."Customer" 
+        WHERE "IsPremium" = true
+        ORDER BY "CustomerId" ASC `;
+        db.query(query, (error, result) => {
+          if (error) {
+            reject(error);
+          }
+          resolve(result.rows);
+        });
+      }
       const query = `SELECT "CustomerId", CONCAT("CustomerName", ' ', "CustomerSurname") AS "CustomerFullName", "CustomerEmail", "CustomerPhone", "PolicyAccepted", "JConto", "Cap" FROM public."Customer" ORDER BY "CustomerId" ASC `;
 
       db.query(query, (error, result) => {
@@ -12,8 +23,17 @@ class ContactModel {
     });
   }
 
-  static GetAllCompany(db) {
+  static GetAllCompany(isPremium, db) {
     return new Promise((resolve, reject) => {
+      if (isPremium) {
+        const query = `SELECT * FROM public."Company" WHERE "IsPremium" = true ORDER BY "CompanyId" ASC `;
+        db.query(query, (error, result) => {
+          if (error) {
+            reject(error);
+          }
+          resolve(result.rows);
+        });
+      }
       const query = `SELECT * FROM public."Company" ORDER BY "CompanyId" ASC `;
 
       db.query(query, (error, result) => {

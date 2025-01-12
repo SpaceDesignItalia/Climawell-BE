@@ -5,16 +5,17 @@ class ContactController {
   static async GetAllPrivate(req, res, db) {
     try {
       const isPremium = req.body.isPremium();
-      const contacts = await ContactModel.GetAllPrivate(db);
+      const contacts = await ContactModel.GetAllPrivate(isPremium, db);
       res.status(200).json(contacts);
     } catch (error) {
       console.error("Errore nell'recuperare i clienti:", error);
     }
   }
 
-  static async GetAllCompany(res, db) {
+  static async GetAllCompany(req, res, db) {
     try {
-      const contacts = await ContactModel.GetAllCompany(db);
+      const isPremium = req.body.isPremium();
+      const contacts = await ContactModel.GetAllCompany(isPremium, db);
       res.status(200).json(contacts);
     } catch (error) {
       console.error("Errore nell'recuperare i clienti:", error);
