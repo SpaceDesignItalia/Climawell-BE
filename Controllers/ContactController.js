@@ -4,7 +4,7 @@ const ContactModel = require("../Models/ContactModel");
 class ContactController {
   static async GetAllPrivate(req, res, db) {
     try {
-      const isPremium = req.body.isPremium();
+      const isPremium = req.body.isPremium;
       const contacts = await ContactModel.GetAllPrivate(isPremium, db);
       res.status(200).json(contacts);
     } catch (error) {
@@ -14,7 +14,7 @@ class ContactController {
 
   static async GetAllCompany(req, res, db) {
     try {
-      const isPremium = req.body.isPremium();
+      const isPremium = req.body.isPremium;
       const contacts = await ContactModel.GetAllCompany(isPremium, db);
       res.status(200).json(contacts);
     } catch (error) {
