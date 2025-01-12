@@ -82,6 +82,85 @@ class Messages {
 
     console.log("Tutti i messaggi sono stati elaborati.");
   }
+
+  static async sendCompanyMessage(title, description, imagePath, cap, db) {
+    console.log("Inizio l'invio dei messaggi alle aziende.");
+    // Carica l'immagine richiesta
+    const imageId = await uploadImage(imagePath);
+
+    // Ottieni tutti i contatti aziendali dal database
+    const contacts = await ContactModel.GetCompaniesByCap(cap, db);
+
+    // Itera su ciascun contatto
+    for (const contact of contacts) {
+      const name = contact.CompanyName;
+      const phoneNumber = contact.CompanyPhone;
+
+      try {
+        const response = await axios({
+          url: "https://graph.facebook.com/v21.0/522369940963643/messages",
+          method: "post",
+          headers: {
+            Authorization: `Bearer ${process.env.WHATSAPP_TOKEN}`,
+            "Content-Type": "application/json",
+          },
+          data: JSON.stringify({
+            messaging_product: "whatsapp",
+            to: "39" + phoneNumber, // Prefisso italiano e numero di telefono
+            type: "template",
+            template: {
+              name: "climawellm",
+              language: {
+                code: "it",
+              },
+              components: [
+                {
+                  type: "header",
+                  parameters: [
+                    {
+                      type: "image",
+                      image: {
+                        id: imageId, // ID immagine già caricato
+                      },
+                    },
+                  ],
+                },
+                {
+                  type: "body",
+                  parameters: [
+                    {
+                      type: "text",
+                      text: title, // Titolo del messaggio
+                    },
+                    {
+                      type: "text",
+                      text: name, // Nome del cliente
+                    },
+                    {
+                      type: "text",
+                      text: description, // Descrizione del messaggio
+                    },
+                  ],
+                },
+              ],
+            },
+          }),
+        });
+
+        console.log(
+          `Messaggio inviato a ${name} (${phoneNumber}):`,
+          response.data
+        );
+      } catch (error) {
+        console.error(
+          `Errore nell'invio del messaggio a ${name} (${phoneNumber}):`,
+          error.response?.data || error.message
+        );
+      }
+    }
+
+    console.log("Tutti i messaggi sono stati elaborati.");
+  }
 }
 
 const FormData = require("form-data");
