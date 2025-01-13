@@ -50,6 +50,10 @@ const contactPOST = (db) => {
     ContactController.DeleteCompanyContact(req, res, db);
   });
 
+  router.post("/UpdateContact", (req, res) => {
+    ContactController.UpdateContact(req, res, db);
+  });
+
   return router; // Ritorna il router per consentire l'utilizzo da parte dell'app principale
 };
 

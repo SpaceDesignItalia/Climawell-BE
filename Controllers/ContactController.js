@@ -98,6 +98,21 @@ class ContactController {
       console.error("Errore nell'recuperare i CAP:", error);
     }
   }
+
+  static async UpdateContact(req, res, db) {
+    try {
+      const { ContactData, ContactType } = req.body;
+      await ContactModel.UpdateContact(
+        db,
+        JSON.parse(ContactData),
+        ContactType
+      );
+      res.status(200).send("Cliente aggiornato con successo.");
+    } catch (error) {
+      console.error("Errore nell'aggiornare il cliente:", error);
+      res.status(500).send("Aggiornamento del cliente fallito.");
+    }
+  }
 }
 
 module.exports = ContactController;
