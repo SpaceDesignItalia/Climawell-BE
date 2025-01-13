@@ -22,6 +22,35 @@ class ContactController {
     }
   }
 
+  static async SearchPrivateContactByEmail(req, res, db) {
+    try {
+      const CustomerEmail = req.query.CustomerEmail;
+      const isPremium = req.query.isPremium;
+      const contacts = await ContactModel.SearchPrivateContactByEmail(
+        CustomerEmail,
+        isPremium,
+        db
+      );
+      res.status(200).json(contacts);
+    } catch (error) {
+      console.error("Errore nell'recuperare i clienti:", error);
+    }
+  }
+  static async SearchCompanyContactByEmail(req, res, db) {
+    try {
+      const CustomerEmail = req.query.CustomerEmail;
+      const isPremium = req.query.isPremium;
+      const contacts = await ContactModel.SearchCompanyContactByEmail(
+        CustomerEmail,
+        isPremium,
+        db
+      );
+      res.status(200).json(contacts);
+    } catch (error) {
+      console.error("Errore nell'recuperare i clienti:", error);
+    }
+  }
+
   static async AddNewContact(req, res, db) {
     try {
       const ContactData = req.body.ContactData;

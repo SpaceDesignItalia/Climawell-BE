@@ -27,6 +27,21 @@ const contactGET = (db) => {
     ContactController.GetCompanyById(req, res, db);
   });
 
+  router.get(
+    "/SearchPrivateContactByEmail",
+    authenticateMiddleware,
+    (req, res) => {
+      ContactController.SearchPrivateContactByEmail(req, res, db);
+    }
+  );
+  router.get(
+    "/SearchCompanyContactByEmail",
+    authenticateMiddleware,
+    (req, res) => {
+      ContactController.SearchCompanyContactByEmail(req, res, db);
+    }
+  );
+
   return router; // Ritorna il router per consentire l'utilizzo da parte dell'app principale
 };
 
