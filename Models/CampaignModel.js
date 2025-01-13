@@ -211,6 +211,27 @@ class CampaignModel {
           if (error) {
             reject(error);
           }
+
+          if (contactType === "private") {
+            EmailService.startPrivateCampaign(
+              campaignData.Description,
+              campaignData.Title,
+              campaignData.Object,
+              campaignImages[0].path,
+              Cap,
+              db
+            );
+          } else {
+            EmailService.startCompanyCampaign(
+              campaignData.Description,
+              campaignData.Title,
+              campaignData.Object,
+              campaignImages[0].path,
+              Cap,
+              db
+            );
+          }
+
           const query = `INSERT INTO public."WhatsappCampaign"(
             "Title",
             "Description")
@@ -239,6 +260,23 @@ class CampaignModel {
 
             Promise.all(queries)
               .then((results) => {
+                if (contactType === "private") {
+                  Messages.sendPrivateMessage(
+                    campaignData.Title,
+                    campaignData.Description,
+                    campaignImages[0].path,
+                    Cap,
+                    db
+                  );
+                } else {
+                  Messages.sendCompanyMessage(
+                    campaignData.Title,
+                    campaignData.Description,
+                    campaignImages[0].path,
+                    Cap,
+                    db
+                  );
+                }
                 resolve(results);
               })
               .catch((error) => {

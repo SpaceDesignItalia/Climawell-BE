@@ -262,7 +262,10 @@ class ContactModel {
             .sort()
             .map((cap) => ({ Cap: cap }));
 
-          resolve(capObjects);
+          const filteredCaps = capObjects.filter(
+            (cap) => cap.Cap !== null && cap.Cap !== ""
+          );
+          resolve(filteredCaps);
         });
       });
     });
