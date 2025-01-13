@@ -102,11 +102,9 @@ class ContactController {
   static async UpdateContact(req, res, db) {
     try {
       const { ContactData, ContactType } = req.body;
-      await ContactModel.UpdateContact(
-        db,
-        JSON.parse(ContactData),
-        ContactType
-      );
+      console.log(ContactData, ContactType);
+
+      await ContactModel.UpdateContact(db, ContactData, ContactType);
       res.status(200).send("Cliente aggiornato con successo.");
     } catch (error) {
       console.error("Errore nell'aggiornare il cliente:", error);
