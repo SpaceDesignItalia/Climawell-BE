@@ -19,6 +19,14 @@ const contactGET = (db) => {
     ContactController.GetAllCaps(res, db);
   });
 
+  router.get("/GetPrivateById", authenticateMiddleware, (req, res) => {
+    ContactController.GetPrivateById(req, res, db);
+  });
+
+  router.get("/GetCompanyById", authenticateMiddleware, (req, res) => {
+    ContactController.GetCompanyById(req, res, db);
+  });
+
   return router; // Ritorna il router per consentire l'utilizzo da parte dell'app principale
 };
 

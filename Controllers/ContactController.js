@@ -113,6 +113,26 @@ class ContactController {
       res.status(500).send("Aggiornamento del cliente fallito.");
     }
   }
+
+  static async GetPrivateById(req, res, db) {
+    try {
+      const { id } = req.query;
+      const contact = await ContactModel.GetPrivateById(id, db);
+      res.status(200).json(contact);
+    } catch (error) {
+      console.error("Errore nell'recuperare il cliente:", error);
+    }
+  }
+
+  static async GetCompanyById(req, res, db) {
+    try {
+      const { id } = req.query;
+      const contact = await ContactModel.GetCompanyById(id, db);
+      res.status(200).json(contact);
+    } catch (error) {
+      console.error("Errore nell'recuperare l'azienda:", error);
+    }
+  }
 }
 
 module.exports = ContactController;

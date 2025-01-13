@@ -386,5 +386,31 @@ class ContactModel {
       }
     });
   }
+
+  static GetPrivateById(id, db) {
+    return new Promise((resolve, reject) => {
+      const query = `SELECT * FROM public."Customer" WHERE "CustomerId" = $1;`;
+
+      db.query(query, [id], (error, result) => {
+        if (error) {
+          reject(error);
+        }
+        resolve(result.rows[0]);
+      });
+    });
+  }
+
+  static GetCompanyById(id, db) {
+    return new Promise((resolve, reject) => {
+      const query = `SELECT * FROM public."Company" WHERE "CompanyId" = $1;`;
+
+      db.query(query, [id], (error, result) => {
+        if (error) {
+          reject(error);
+        }
+        resolve(result.rows[0]);
+      });
+    });
+  }
 }
 module.exports = ContactModel;
