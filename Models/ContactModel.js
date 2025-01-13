@@ -1,8 +1,6 @@
 class ContactModel {
   static GetAllPrivate(isPremium, db) {
-    console.log("isPremium", isPremium);
     return new Promise((resolve, reject) => {
-      console.log("isPremium", isPremium);
       const query = `SELECT "CustomerId", 
        CONCAT("CustomerName", ' ', "CustomerSurname") AS "CustomerFullName", 
        "CustomerEmail", 
