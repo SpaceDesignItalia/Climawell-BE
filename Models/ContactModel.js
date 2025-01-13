@@ -381,23 +381,20 @@ class ContactModel {
 
   static UpdateContact(db, ContactData, ContactType) {
     return new Promise((resolve, reject) => {
-      if (ContactType === "private") {
+      if (ContactType === "Private") {
+        console.log("Cliente Privato");
         const query = `UPDATE public."Customer" SET 
         "CustomerName" = $1, 
         "CustomerSurname" = $2, 
-        "CustomerEmail" = $3, 
+        "CustomerEmail" = $3,
         "CustomerPhone" = $4, 
-        "PolicyAccepted" = $5, 
-        "JConto" = $6, 
-        "Cap" = $7 
-        WHERE "CustomerId" = $8;`;
+        "Cap" = $5 
+        WHERE "CustomerId" = $6;`;
         const values = [
           ContactData.CustomerName,
           ContactData.CustomerSurname,
           ContactData.CustomerEmail,
           ContactData.CustomerPhone,
-          ContactData.PolicyAccepted,
-          ContactData.JConto,
           ContactData.Cap,
           ContactData.CustomerId,
         ];
@@ -409,18 +406,17 @@ class ContactModel {
           resolve(result);
         });
       } else {
+        console.log("Cliente Azienda");
         const query = `UPDATE public."Company" SET 
         "CompanyName" = $1, 
         "CompanyEmail" = $2, 
         "CompanyPhone" = $3, 
-        "JConto" = $4, 
-        "Cap" = $5 
-        WHERE "CompanyId" = $6;`;
+        "Cap" = $4 
+        WHERE "CompanyId" = $5;`;
         const values = [
           ContactData.CompanyName,
           ContactData.CompanyEmail,
           ContactData.CompanyPhone,
-          ContactData.JConto,
           ContactData.Cap,
           ContactData.CompanyId,
         ];
