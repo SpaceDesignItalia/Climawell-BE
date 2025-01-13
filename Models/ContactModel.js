@@ -286,10 +286,40 @@ class ContactModel {
     });
   }
 
+  static GetPrivatesPremiumByCap(cap, db) {
+    return new Promise((resolve, reject) => {
+      const query = `SELECT "CustomerId", CONCAT("CustomerName", ' ', "CustomerSurname") AS "CustomerFullName", "CustomerEmail", "CustomerPhone", "PolicyAccepted", "JConto", "Cap" FROM public."Customer" 
+      WHERE "Cap" = $1 AND "IsPremium" = true
+      ORDER BY "CustomerId" ASC `;
+
+      db.query(query, [cap], (error, result) => {
+        if (error) {
+          reject(error);
+        }
+        resolve(result.rows);
+      });
+    });
+  }
+
   static GetCompaniesByCap(cap, db) {
     return new Promise((resolve, reject) => {
       const query = `SELECT * FROM public."Company" 
       WHERE "Cap" = $1
+      ORDER BY "CompanyId" ASC `;
+
+      db.query(query, [cap], (error, result) => {
+        if (error) {
+          reject(error);
+        }
+        resolve(result.rows);
+      });
+    });
+  }
+
+  static GetCompaniesPremiumByCap(cap, db) {
+    return new Promise((resolve, reject) => {
+      const query = `SELECT * FROM public."Company" 
+      WHERE "Cap" = $1 AND "IsPremium" = true
       ORDER BY "CompanyId" ASC `;
 
       db.query(query, [cap], (error, result) => {

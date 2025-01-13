@@ -221,8 +221,17 @@ class CampaignModel {
               Cap,
               db
             );
-          } else {
+          } else if (contactType === "business") {
             EmailService.startCompanyCampaign(
+              campaignData.Description,
+              campaignData.Title,
+              campaignData.Object,
+              campaignImages[0].path,
+              Cap,
+              db
+            );
+          } else {
+            EmailService.startPremiumCampaign(
               campaignData.Description,
               campaignData.Title,
               campaignData.Object,
@@ -268,8 +277,16 @@ class CampaignModel {
                     Cap,
                     db
                   );
-                } else {
+                } else if (contactType === "business") {
                   Messages.sendCompanyMessage(
+                    campaignData.Title,
+                    campaignData.Description,
+                    campaignImages[0].path,
+                    Cap,
+                    db
+                  );
+                } else {
+                  Messages.sendPremiumMessage(
                     campaignData.Title,
                     campaignData.Description,
                     campaignImages[0].path,
