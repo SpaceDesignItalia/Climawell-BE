@@ -336,6 +336,19 @@ class CampaignModel {
       });
     });
   }
+
+  static CheckWhatsappBlock(db) {
+    return new Promise((resolve, reject) => {
+      const query = `SELECT * FROM public."Utils" WHERE "name" = 'blockWhatsappCampaign';`;
+      db.query(query, (error, result) => {
+        if (error) {
+          reject(error);
+        }
+        console.log(result.rows[0]);
+        resolve(result.rows[0].value);
+      });
+    });
+  }
 }
 
 module.exports = CampaignModel;

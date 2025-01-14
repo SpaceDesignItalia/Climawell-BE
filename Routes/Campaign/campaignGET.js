@@ -36,6 +36,10 @@ const campaignGET = (db) => {
     }
   );
 
+  router.get("/CheckWhatsappBlock", authenticateMiddleware, (req, res) => {
+    CampaignController.CheckWhatsappBlock(req, res, db);
+  });
+
   return router; // Return the router to allow usage by the main app
 };
 

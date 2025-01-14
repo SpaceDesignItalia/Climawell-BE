@@ -128,6 +128,17 @@ class CampaignController {
       res.status(500).send("Errore nell'eliminare la campagna.");
     }
   }
+
+  static async CheckWhatsappBlock(req, res, db) {
+    try {
+      const blocked = await CampaignModel.CheckWhatsappBlock(db);
+
+      res.status(200).send({ blocked });
+    } catch (error) {
+      console.error("Errore nel verificare il blocco:", error);
+      res.status(500).send("Errore nel verificare il blocco.");
+    }
+  }
 }
 
 module.exports = CampaignController;
