@@ -13,15 +13,15 @@ class Messages {
     // Ottieni tutti i contatti privati dal database
     const contacts = await ContactModel.GetPrivatesByCap(cap, db);
 
-    if (contacts.length > 2) {
-      console.log("I contatti sono più di 2. Gestione a batch attivata.");
+    if (contacts.length > 250) {
+      console.log("I contatti sono più di 250. Gestione a batch attivata.");
 
       // Imposta BlockWhatsappCampaign a true
       await db.query(
         `UPDATE public."Utils" SET value = true WHERE name = 'blockWhatsappCampaign'`
       );
 
-      const batchSize = 2;
+      const batchSize = 250;
       let batchNumber = 0;
 
       // Dividi i contatti in batch
@@ -48,8 +48,10 @@ class Messages {
 
         // Se ci sono altri batch, aspetta 26 ore
         if (batchNumber * batchSize < contacts.length) {
-          console.log("Aspetto 2 minuti prima del prossimo batch.");
-          await new Promise((resolve) => setTimeout(resolve, 2 * 60 * 1000)); // 26 ore
+          console.log("Aspetto 26 ore prima del prossimo batch.");
+          await new Promise((resolve) =>
+            setTimeout(resolve, 26 * 60 * 60 * 1000)
+          ); // 26 ore
         }
       }
 
