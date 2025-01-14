@@ -38,6 +38,52 @@ class ContactModel {
     });
   }
 
+  static SearchPrivateContactByEmail(CustomerEmail, isPremium, db) {
+    return new Promise((resolve, reject) => {
+      const query = `
+        SELECT 
+          "CustomerId", 
+          CONCAT("CustomerName", ' ', "CustomerSurname") AS "CustomerFullName", 
+          "CustomerEmail", 
+          "CustomerPhone", 
+          "PolicyAccepted", 
+          "JConto", 
+          "Cap" 
+        FROM public."Customer"
+        WHERE (($1 = true AND "IsPremium" = true) OR ($1 = false))
+          AND ("CustomerEmail" ILIKE $2)
+        ORDER BY "CustomerId" ASC;
+      `;
+
+      db.query(query, [isPremium, `%${CustomerEmail}%`], (error, result) => {
+        if (error) {
+          reject(error);
+        } else {
+          resolve(result.rows);
+        }
+      });
+    });
+  }
+  static SearchCompanyContactByEmail(CustomerEmail, isPremium, db) {
+    return new Promise((resolve, reject) => {
+      const query = `
+       SELECT * 
+      FROM public."Company" 
+      WHERE (($1 = true AND "IsPremium" = true) OR ($1 = false))
+        AND ("CompanyName" ILIKE $2)
+      ORDER BY "CompanyId" ASC;
+      `;
+
+      db.query(query, [isPremium, `%${CustomerEmail}%`], (error, result) => {
+        if (error) {
+          reject(error);
+        } else {
+          resolve(result.rows);
+        }
+      });
+    });
+  }
+
   static AddContact(db, ContactData, ContactType, PrivacyFile) {
     return new Promise((resolve, reject) => {
       if (ContactType === "private") {
