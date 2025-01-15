@@ -204,17 +204,21 @@ class ProductsController {
       res.status(500).send("Recupero delle statistiche fallita");
     }
   }
+  
   static async getCategoryStats(req, res, db) {
     try {
       const stats = await Products.getCategoryStats(db);
-      if (stats) {
-        res.status(200).json(stats);
-      }
+      console.log('Sending category stats:', stats);
+      res.json(stats);
     } catch (error) {
-      console.error("Errore nel recupero delle statistiche:", error);
-      res.status(500).send("Recupero delle statistiche fallita");
+      console.error('Error in getCategoryStats controller:', error);
+      res.status(500).json({ 
+        error: 'Errore nel recuperare le statistiche delle categorie',
+        details: error.message 
+      });
     }
   }
+
 
   static async getWarehouseValue(req, res, db) {
     try {

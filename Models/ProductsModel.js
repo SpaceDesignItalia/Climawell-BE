@@ -340,25 +340,32 @@ class ProductsModel {
   static async getCategoryStats(db) {
     return new Promise((resolve, reject) => {
       const query = `
-      SELECT 
-        c."CategoryName", 
-        ROUND(COUNT(p."ProductId") * 100.0 / (SELECT COUNT(*) FROM "Product"), 2) AS "Percentage"
-      FROM 
-        "Product" p
-      JOIN 
-        "Category" c ON p."CategoryId" = c."CategoryId"
-      GROUP BY 
-        c."CategoryName"
-      ORDER BY 
-        "Percentage" DESC;`; // Ordina in base alla percentuale, opzionale
+        SELECT 
+          c."CategoryName",
+          SUM(p."ProductAmount")::integer as "Count"
+        FROM 
+          "Product" p
+        JOIN 
+          "Category" c ON p."CategoryId" = c."CategoryId"
+        GROUP BY 
+          c."CategoryName"
+        ORDER BY 
+          "Count" DESC;
+      `;
+  
       db.query(query, (error, result) => {
         if (error) {
+          console.error('Error in getCategoryStats:', error);
           reject(error);
         }
-        resolve(result.rows); // Restituisci tutte le righe
+        console.log('Category stats:', result.rows);
+        resolve(result.rows);
       });
     });
   }
+  
+
+  
 
   static async getWarehouseValue(db) {
     return new Promise((resolve, reject) => {
