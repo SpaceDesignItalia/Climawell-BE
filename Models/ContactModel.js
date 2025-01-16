@@ -388,14 +388,16 @@ class ContactModel {
         "CustomerSurname" = $2, 
         "CustomerEmail" = $3,
         "CustomerPhone" = $4, 
-        "Cap" = $5 
-        WHERE "CustomerId" = $6;`;
+        "Cap" = $5,
+        "IsPremium" = $6
+        WHERE "CustomerId" = $7;`;
         const values = [
           ContactData.CustomerName,
           ContactData.CustomerSurname,
           ContactData.CustomerEmail,
           ContactData.CustomerPhone,
           ContactData.Cap,
+          ContactData.IsPremium ? true : false,
           ContactData.CustomerId,
         ];
 
@@ -411,13 +413,15 @@ class ContactModel {
         "CompanyName" = $1, 
         "CompanyEmail" = $2, 
         "CompanyPhone" = $3, 
-        "Cap" = $4 
-        WHERE "CompanyId" = $5;`;
+        "Cap" = $4,
+        "IsPremium" = $5
+        WHERE "CompanyId" = $6;`;
         const values = [
           ContactData.CompanyName,
           ContactData.CompanyEmail,
           ContactData.CompanyPhone,
           ContactData.Cap,
+          ContactData.IsPremium ? true : false,
           ContactData.CompanyId,
         ];
 
