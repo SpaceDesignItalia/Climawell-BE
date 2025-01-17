@@ -6,7 +6,7 @@ class ContactModel {
        "CustomerEmail", 
        "CustomerPhone", 
        "PolicyAccepted", 
-       "JConto", 
+       "Agente", 
        "Cap" 
         FROM public."Customer"
         WHERE ($1 = true AND "IsPremium" = true) OR ($1 = false)
@@ -47,7 +47,7 @@ class ContactModel {
           "CustomerEmail", 
           "CustomerPhone", 
           "PolicyAccepted", 
-          "JConto", 
+          "Agente", 
           "Cap" 
         FROM public."Customer"
         WHERE (($1 = true AND "IsPremium" = true) OR ($1 = false))
@@ -186,7 +186,7 @@ class ContactModel {
         "CompanyEmail", 
         "CompanyPhone", 
         "CompanyVAT",
-        "JConto",
+        "Agente",
         "Cap"
       ) VALUES ($1, $2, $3, 'test', $4, $5);`;
 
@@ -195,7 +195,7 @@ class ContactModel {
           company.CompanyName,
           company.CompanyEmail,
           company.CompanyPhone,
-          company.JConto,
+          company.Agente,
           company.Cap,
         ];
 
@@ -223,7 +223,7 @@ class ContactModel {
         "CustomerPhone", 
         "PolicyAccepted", 
         "PolicyDocumentUrl",
-        "JConto",
+        "Agente",
         "Cap"
       ) VALUES ($1, $2, $3, $4, true, 'test', $5, $6);`;
 
@@ -233,7 +233,7 @@ class ContactModel {
           customer.CustomerSurname,
           customer.CustomerEmail,
           customer.CustomerPhone,
-          customer.JConto,
+          customer.Agente,
           customer.Cap,
         ];
 
@@ -321,7 +321,7 @@ class ContactModel {
 
   static GetPrivatesByCap(cap, db) {
     return new Promise((resolve, reject) => {
-      const query = `SELECT "CustomerId", CONCAT("CustomerName", ' ', "CustomerSurname") AS "CustomerFullName", "CustomerEmail", "CustomerPhone", "PolicyAccepted", "JConto", "Cap" FROM public."Customer" 
+      const query = `SELECT "CustomerId", CONCAT("CustomerName", ' ', "CustomerSurname") AS "CustomerFullName", "CustomerEmail", "CustomerPhone", "PolicyAccepted", "Agente", "Cap" FROM public."Customer" 
       WHERE "Cap" = $1
       ORDER BY "CustomerId" ASC `;
 
@@ -336,7 +336,7 @@ class ContactModel {
 
   static GetPrivatesPremiumByCap(cap, db) {
     return new Promise((resolve, reject) => {
-      const query = `SELECT "CustomerId", CONCAT("CustomerName", ' ', "CustomerSurname") AS "CustomerFullName", "CustomerEmail", "CustomerPhone", "PolicyAccepted", "JConto", "Cap" FROM public."Customer" 
+      const query = `SELECT "CustomerId", CONCAT("CustomerName", ' ', "CustomerSurname") AS "CustomerFullName", "CustomerEmail", "CustomerPhone", "PolicyAccepted", "Agente", "Cap" FROM public."Customer" 
       WHERE "Cap" = $1 AND "IsPremium" = true
       ORDER BY "CustomerId" ASC `;
 
