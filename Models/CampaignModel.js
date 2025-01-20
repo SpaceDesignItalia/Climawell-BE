@@ -82,7 +82,8 @@ class CampaignModel {
     campaignType,
     contactType,
     campaignImages,
-    Cap
+    Cap,
+    Agente
   ) {
     console.log(campaignData);
     return new Promise((resolve, reject) => {

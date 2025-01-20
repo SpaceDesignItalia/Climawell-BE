@@ -76,6 +76,7 @@ class CampaignController {
       const ContactType = req.body.ContactType;
       const CampaignImages = req.files;
       const Cap = req.body.Cap;
+      const Agente = req.body.ContactCode;
       let CampaignData;
 
       if (CampaignType == "email") {
@@ -85,7 +86,7 @@ class CampaignController {
       } else {
         CampaignData = req.body.EmailCampaignData;
       }
-
+      console.log("Agente campagna  :",Agente);
       // Passa i dati al modello per l'inserimento
       await CampaignModel.AddNewCampaign(
         db,
@@ -93,7 +94,8 @@ class CampaignController {
         CampaignType,
         ContactType,
         CampaignImages,
-        Cap
+        Cap,
+        Agente
       );
 
       res.status(201).send("Campagna aggiunta con successo.");
