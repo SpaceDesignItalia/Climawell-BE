@@ -17,11 +17,13 @@ class ProductsModel {
              FROM "Productimage" pi
              WHERE pi."ProductId" = p."ProductId"
              ORDER BY pi."ProductImageId" ASC
-             LIMIT 1) AS "FirstImage"
+             LIMIT 1) AS "FirstImage",
+             "BrandId"
         FROM "Product" p
         LEFT JOIN "Category" c ON p."CategoryId" = c."CategoryId"
         LEFT JOIN "FeaturedProduct" fp ON p."ProductId" = fp."ProductId"
         LEFT JOIN "ProductDiscount" pd ON p."ProductId" = pd."ProductId"
+        LEFT JOIN "Brand" b ON p."BrandId" = b."BrandId"
       `;
 
       db.query(query, (error, result) => {
@@ -63,11 +65,13 @@ class ProductsModel {
              FROM "Productimage" pi
              WHERE pi."ProductId" = p."ProductId"
              ORDER BY pi."ProductImageId" ASC
-             LIMIT 1) AS "FirstImage"
+             LIMIT 1) AS "FirstImage",
+            "BrandId"
         FROM "Product" p
         LEFT JOIN "Category" c ON p."CategoryId" = c."CategoryId"
         JOIN "FeaturedProduct" fp ON p."ProductId" = fp."ProductId"
         LEFT JOIN "ProductDiscount" pd ON p."ProductId" = pd."ProductId"
+        LEFT JOIN "Brand" b ON p."BrandId" = b."BrandId"
       `;
 
       db.query(query, (error, result) => {
@@ -91,12 +95,14 @@ class ProductsModel {
                   ELSE false 
               END AS "isFeatured",
               pi."ProductImageId",
-              pi."ProductImageUrl"
+              pi."ProductImageUrl",
+              "BrandId"
           FROM "Product" p
           LEFT JOIN "Category" c ON p."CategoryId" = c."CategoryId"
           LEFT JOIN "FeaturedProduct" fp ON p."ProductId" = fp."ProductId"
           LEFT JOIN "ProductDiscount" pd ON p."ProductId" = pd."ProductId"
           LEFT JOIN "Productimage" pi ON pi."ProductId" = p."ProductId"
+          LEFT JOIN "Brand" b ON p."BrandId" = b."BrandId"
           WHERE p."ProductId" = $1`;
 
       db.query(query, [ProductId], (error, result) => {
@@ -183,11 +189,13 @@ class ProductsModel {
              FROM "Productimage" pi
              WHERE pi."ProductId" = p."ProductId"
              ORDER BY pi."ProductImageId" ASC
-             LIMIT 1) AS "FirstImage"
+             LIMIT 1) AS "FirstImage",
+            "BrandId"
         FROM "Product" p
         LEFT JOIN "Category" c ON p."CategoryId" = c."CategoryId"
         LEFT JOIN "FeaturedProduct" fp ON p."ProductId" = fp."ProductId"
         LEFT JOIN "ProductDiscount" pd ON p."ProductId" = pd."ProductId"
+        LEFT JOIN "Brand" b ON p."BrandId" = b."BrandId"
         WHERE p."ProductName" ILIKE $1;
       `;
 
@@ -223,10 +231,12 @@ class ProductsModel {
               WHERE pi."ProductId" = p."ProductId"
               ORDER BY pi."ProductImageId" ASC
               LIMIT 1) AS "FirstImage"
+              "BrandId"
         FROM "Product" p
         LEFT JOIN "Category" c ON p."CategoryId" = c."CategoryId"
         JOIN "FeaturedProduct" fp ON p."ProductId" = fp."ProductId"
         LEFT JOIN "ProductDiscount" pd ON p."ProductId" = pd."ProductId"
+        LEFT JOIN "Brand" b ON p."BrandId" = b."BrandId"
         WHERE p."ProductName" ILIKE $1;
       `;
       const values = [`%${productName}%`];
@@ -256,11 +266,13 @@ class ProductsModel {
               FROM "Productimage" pi
               WHERE pi."ProductId" = p."ProductId"
               ORDER BY pi."ProductImageId" ASC
-              LIMIT 1) AS "FirstImage"
+              LIMIT 1) AS "FirstImage",
+              "BrandId"
         FROM "Product" p
         LEFT JOIN "Category" c ON p."CategoryId" = c."CategoryId"
         LEFT JOIN "FeaturedProduct" fp ON p."ProductId" = fp."ProductId"
         LEFT JOIN "ProductDiscount" pd ON p."ProductId" = pd."ProductId"
+        LEFT JOIN "Brand" b ON p."BrandId" = b."BrandId"
         WHERE p."ProductName" ILIKE '%' || $1 || '%'
         ORDER BY "${orderBy}" ${order};
       `;
@@ -290,11 +302,13 @@ class ProductsModel {
               FROM "Productimage" pi
               WHERE pi."ProductId" = p."ProductId"
               ORDER BY pi."ProductImageId" ASC
-              LIMIT 1) AS "FirstImage"
+              LIMIT 1) AS "FirstImage",
+              "BrandId"
         FROM "Product" p
         LEFT JOIN "Category" c ON p."CategoryId" = c."CategoryId"
         JOIN "FeaturedProduct" fp ON p."ProductId" = fp."ProductId"
         LEFT JOIN "ProductDiscount" pd ON p."ProductId" = pd."ProductId"
+        LEFT JOIN "Brand" b ON p."BrandId" = b."BrandId"
         WHERE p."ProductName" ILIKE '%' || $1 || '%'
         ORDER BY "${orderBy}" ${order};
       `;
