@@ -44,6 +44,10 @@ const productsPOST = (db) => {
     ProductsController.uploadImage(req, res, db);
   });
 
+  router.post("/UploadProducts", authenticateMiddleware, (req, res) => {
+    ProductsController.uploadProducts(req, res, db);
+  });
+
   return router;
 };
 

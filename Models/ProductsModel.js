@@ -352,20 +352,17 @@ class ProductsModel {
         ORDER BY 
           "Count" DESC;
       `;
-  
+
       db.query(query, (error, result) => {
         if (error) {
-          console.error('Error in getCategoryStats:', error);
+          console.error("Error in getCategoryStats:", error);
           reject(error);
         }
-        console.log('Category stats:', result.rows);
+        console.log("Category stats:", result.rows);
         resolve(result.rows);
       });
     });
   }
-  
-
-  
 
   static async getWarehouseValue(db) {
     return new Promise((resolve, reject) => {
@@ -834,6 +831,42 @@ class ProductsModel {
           });
         }
       );
+    });
+  }
+
+  static async uploadProducts(db, products) {
+    return new Promise((resolve, reject) => {
+      insert_query = `INSERT INTO public."Product"("BrandId", "CategoryId", "ProductName", "ProductDescription") VALUES ($1, $2, $3, $4) RETURNING "ProductId";`;
+
+      products.forEach((product) => {
+        db.query(
+          insert_query,
+          [
+            product.BrandId,
+            product.CategoryId,
+            product.ProductName,
+            product.ProductDescription,
+          ],
+          (error, result) => {
+            if (error) {
+              return reject(error);
+            }
+            insert_images_query = `INSERT INTO public."Productimage"("ProductId", "ProductImageUrl") VALUES ($1, $2);`;
+
+            db.query(
+              insert_images_query,
+              [result.rows[0].ProductId, product.ProductImageUrl],
+              (error, result) => {
+                if (error) {
+                  return reject(error);
+                }
+              }
+            );
+          }
+        );
+      });
+
+      resolve({ success: true });
     });
   }
 }

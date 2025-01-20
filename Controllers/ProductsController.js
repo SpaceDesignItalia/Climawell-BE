@@ -1,3 +1,4 @@
+const ProductsModel = require("../Models/ProductsModel");
 const Products = require("../Models/ProductsModel");
 
 class ProductsController {
@@ -204,21 +205,20 @@ class ProductsController {
       res.status(500).send("Recupero delle statistiche fallita");
     }
   }
-  
+
   static async getCategoryStats(req, res, db) {
     try {
       const stats = await Products.getCategoryStats(db);
-      console.log('Sending category stats:', stats);
+      console.log("Sending category stats:", stats);
       res.json(stats);
     } catch (error) {
-      console.error('Error in getCategoryStats controller:', error);
-      res.status(500).json({ 
-        error: 'Errore nel recuperare le statistiche delle categorie',
-        details: error.message 
+      console.error("Error in getCategoryStats controller:", error);
+      res.status(500).json({
+        error: "Errore nel recuperare le statistiche delle categorie",
+        details: error.message,
       });
     }
   }
-
 
   static async getWarehouseValue(req, res, db) {
     try {
@@ -368,6 +368,18 @@ class ProductsController {
         console.error("Errore nella modifica della categoria:", error);
         res.status(500).send("Modifica della categoria fallito");
       }
+    }
+  }
+
+  static async uploadProducts(req, res, db) {
+    try {
+      const { products } = req.body;
+
+      await ProductsModel.uploadProducts(db, products);
+      res.status(201).send("Prodotti aggiunti con successo.");
+    } catch (error) {
+      console.error("Errore nell'aggiungere i prodotti:", error);
+      res.status(500).send("Aggiunta dei prodotti fallita.");
     }
   }
 }
