@@ -18,7 +18,7 @@ class ProductsModel {
              WHERE pi."ProductId" = p."ProductId"
              ORDER BY pi."ProductImageId" ASC
              LIMIT 1) AS "FirstImage",
-             "BrandId"
+             "BrandName"
         FROM "Product" p
         LEFT JOIN "Category" c ON p."CategoryId" = c."CategoryId"
         LEFT JOIN "FeaturedProduct" fp ON p."ProductId" = fp."ProductId"
@@ -66,7 +66,7 @@ class ProductsModel {
              WHERE pi."ProductId" = p."ProductId"
              ORDER BY pi."ProductImageId" ASC
              LIMIT 1) AS "FirstImage",
-            "BrandId"
+            "BrandName"
         FROM "Product" p
         LEFT JOIN "Category" c ON p."CategoryId" = c."CategoryId"
         JOIN "FeaturedProduct" fp ON p."ProductId" = fp."ProductId"
@@ -96,7 +96,7 @@ class ProductsModel {
               END AS "isFeatured",
               pi."ProductImageId",
               pi."ProductImageUrl",
-              "BrandId"
+              "BrandName"
           FROM "Product" p
           LEFT JOIN "Category" c ON p."CategoryId" = c."CategoryId"
           LEFT JOIN "FeaturedProduct" fp ON p."ProductId" = fp."ProductId"
@@ -190,7 +190,7 @@ class ProductsModel {
              WHERE pi."ProductId" = p."ProductId"
              ORDER BY pi."ProductImageId" ASC
              LIMIT 1) AS "FirstImage",
-            "BrandId"
+            "BrandName"
         FROM "Product" p
         LEFT JOIN "Category" c ON p."CategoryId" = c."CategoryId"
         LEFT JOIN "FeaturedProduct" fp ON p."ProductId" = fp."ProductId"
@@ -231,7 +231,7 @@ class ProductsModel {
               WHERE pi."ProductId" = p."ProductId"
               ORDER BY pi."ProductImageId" ASC
               LIMIT 1) AS "FirstImage"
-              "BrandId"
+              "BrandName"
         FROM "Product" p
         LEFT JOIN "Category" c ON p."CategoryId" = c."CategoryId"
         JOIN "FeaturedProduct" fp ON p."ProductId" = fp."ProductId"
@@ -267,7 +267,7 @@ class ProductsModel {
               WHERE pi."ProductId" = p."ProductId"
               ORDER BY pi."ProductImageId" ASC
               LIMIT 1) AS "FirstImage",
-              "BrandId"
+              "BrandName"
         FROM "Product" p
         LEFT JOIN "Category" c ON p."CategoryId" = c."CategoryId"
         LEFT JOIN "FeaturedProduct" fp ON p."ProductId" = fp."ProductId"
@@ -303,7 +303,7 @@ class ProductsModel {
               WHERE pi."ProductId" = p."ProductId"
               ORDER BY pi."ProductImageId" ASC
               LIMIT 1) AS "FirstImage",
-              "BrandId"
+              "BrandName"
         FROM "Product" p
         LEFT JOIN "Category" c ON p."CategoryId" = c."CategoryId"
         JOIN "FeaturedProduct" fp ON p."ProductId" = fp."ProductId"
