@@ -850,8 +850,9 @@ class ProductsModel {
 
   static async uploadProducts(db, products) {
     return new Promise((resolve, reject) => {
-      insert_query = `INSERT INTO public."Product"("BrandId", "CategoryId", "ProductName", "ProductDescription") VALUES ($1, $2, $3, $4) RETURNING "ProductId";`;
+      const insert_query = `INSERT INTO public."Product"("BrandId", "CategoryId", "ProductName", "ProductDescription") VALUES ($1, $2, $3, $4) RETURNING "ProductId";`;
 
+      console.log(products);
       products.forEach((product) => {
         db.query(
           insert_query,
@@ -863,15 +864,17 @@ class ProductsModel {
           ],
           (error, result) => {
             if (error) {
+              console.log(error);
               return reject(error);
             }
-            insert_images_query = `INSERT INTO public."Productimage"("ProductId", "ProductImageUrl") VALUES ($1, $2);`;
+            const insert_images_query = `INSERT INTO public."Productimage"("ProductId", "ProductImageUrl") VALUES ($1, $2);`;
 
             db.query(
               insert_images_query,
               [result.rows[0].ProductId, product.ProductImageUrl],
               (error, result) => {
                 if (error) {
+                  console.log("Fabbozzi gay123123");
                   return reject(error);
                 }
               }

@@ -373,7 +373,7 @@ class ProductsController {
 
   static async uploadProducts(req, res, db) {
     try {
-      const { products } = req.body;
+      const products = req.body;
 
       await ProductsModel.uploadProducts(db, products);
       res.status(201).send("Prodotti aggiunti con successo.");
