@@ -6,7 +6,7 @@ class ContactModel {
        "CustomerEmail", 
        "CustomerPhone", 
        "PolicyAccepted", 
-       "JConto", 
+       "Agente", 
        "Cap" 
         FROM public."Customer"
         WHERE ($1 = true AND "IsPremium" = true) OR ($1 = false)
@@ -47,7 +47,7 @@ class ContactModel {
           "CustomerEmail", 
           "CustomerPhone", 
           "PolicyAccepted", 
-          "JConto", 
+          "Agente", 
           "Cap" 
         FROM public."Customer"
         WHERE (($1 = true AND "IsPremium" = true) OR ($1 = false))
@@ -90,18 +90,18 @@ class ContactModel {
         // Controllo esistenza cliente privato con la stessa email
         const checkEmailQuery = `SELECT COUNT(*) FROM public."Customer" WHERE "CustomerEmail" = $1;`;
         const emailValue = [ContactData.CustomerEmail];
-
+  
         db.query(checkEmailQuery, emailValue, (error, result) => {
           if (error) {
             return reject(error);
           }
-
+  
           const emailExists = parseInt(result.rows[0].count) > 0;
-
+  
           if (emailExists) {
             return reject(new Error("Esiste già un cliente con questa email."));
           }
-
+          console.log(ContactData);
           // Inserimento del nuovo cliente privato
           const query = `INSERT INTO public."Customer"(
             "CustomerName", 
@@ -111,8 +111,9 @@ class ContactModel {
             "PolicyAccepted", 
             "PolicyDocumentUrl",
             "IsPremium",
-            "Cap"
-          ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8);`;
+            "Cap",
+            "Agente"
+          ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9);`;
           const values = [
             ContactData.CustomerName,
             ContactData.CustomerSurname,
@@ -122,8 +123,9 @@ class ContactModel {
             PrivacyFile,
             ContactData.isPremium ? true : false,
             ContactData.Cap,
+            ContactData.Agente,
           ];
-
+  
           db.query(query, values, (error, result) => {
             if (error) {
               return reject(error);
@@ -135,19 +137,19 @@ class ContactModel {
         // Controllo esistenza azienda con lo stesso nome e Partita IVA
         const checkCompanyQuery = `SELECT COUNT(*) FROM public."Company" WHERE "CompanyName" = $1 AND "CompanyVAT" = $2;`;
         const companyValues = [ContactData.CompanyName, ContactData.CompanyVAT];
-
+  
         db.query(checkCompanyQuery, companyValues, (error, result) => {
           if (error) {
             return reject(error);
           }
-
+  
           const companyExists = parseInt(result.rows[0].count) > 0;
           if (companyExists) {
             return reject(
               new Error("Esiste già un'azienda con questo nome e Partita IVA.")
             );
           }
-
+  
           // Inserimento della nuova azienda
           const query = `INSERT INTO public."Company"(
             "CompanyName", 
@@ -155,8 +157,9 @@ class ContactModel {
             "CompanyPhone", 
             "CompanyVAT",
             "IsPremium",
-            "Cap"
-          ) VALUES ($1, $2, $3, $4, $5, $6);`;
+            "Cap",
+            "Agente"
+          ) VALUES ($1, $2, $3, $4, $5, $6, $7);`;
           const values = [
             ContactData.CompanyName,
             ContactData.CompanyEmail,
@@ -164,8 +167,9 @@ class ContactModel {
             ContactData.CompanyVAT,
             ContactData.isPremium ? true : false,
             ContactData.Cap,
+            ContactData.Agente,
           ];
-
+  
           db.query(query, values, (error, result) => {
             if (error) {
               return reject(error);
@@ -186,7 +190,7 @@ class ContactModel {
         "CompanyEmail", 
         "CompanyPhone", 
         "CompanyVAT",
-        "JConto",
+        "Agente",
         "Cap"
       ) VALUES ($1, $2, $3, 'test', $4, $5);`;
 
@@ -195,7 +199,7 @@ class ContactModel {
           company.CompanyName,
           company.CompanyEmail,
           company.CompanyPhone,
-          company.JConto,
+          company.Agente,
           company.Cap,
         ];
 
@@ -223,7 +227,7 @@ class ContactModel {
         "CustomerPhone", 
         "PolicyAccepted", 
         "PolicyDocumentUrl",
-        "JConto",
+        "Agente",
         "Cap"
       ) VALUES ($1, $2, $3, $4, true, 'test', $5, $6);`;
 
@@ -233,7 +237,7 @@ class ContactModel {
           customer.CustomerSurname,
           customer.CustomerEmail,
           customer.CustomerPhone,
-          customer.JConto,
+          customer.Agente,
           customer.Cap,
         ];
 
@@ -321,7 +325,7 @@ class ContactModel {
 
   static GetPrivatesByCap(cap, db) {
     return new Promise((resolve, reject) => {
-      const query = `SELECT "CustomerId", CONCAT("CustomerName", ' ', "CustomerSurname") AS "CustomerFullName", "CustomerEmail", "CustomerPhone", "PolicyAccepted", "JConto", "Cap" FROM public."Customer" 
+      const query = `SELECT "CustomerId", CONCAT("CustomerName", ' ', "CustomerSurname") AS "CustomerFullName", "CustomerEmail", "CustomerPhone", "PolicyAccepted", "Agente", "Cap" FROM public."Customer" 
       WHERE "Cap" = $1
       ORDER BY "CustomerId" ASC `;
 
@@ -336,7 +340,7 @@ class ContactModel {
 
   static GetPrivatesPremiumByCap(cap, db) {
     return new Promise((resolve, reject) => {
-      const query = `SELECT "CustomerId", CONCAT("CustomerName", ' ', "CustomerSurname") AS "CustomerFullName", "CustomerEmail", "CustomerPhone", "PolicyAccepted", "JConto", "Cap" FROM public."Customer" 
+      const query = `SELECT "CustomerId", CONCAT("CustomerName", ' ', "CustomerSurname") AS "CustomerFullName", "CustomerEmail", "CustomerPhone", "PolicyAccepted", "Agente", "Cap" FROM public."Customer" 
       WHERE "Cap" = $1 AND "IsPremium" = true
       ORDER BY "CustomerId" ASC `;
 
