@@ -112,6 +112,7 @@ class CampaignModel {
               campaignData.Object,
               campaignImages[0].path,
               Cap,
+              Agente,
               db
             );
           } else if (contactType === "business") {
@@ -121,6 +122,7 @@ class CampaignModel {
               campaignData.Object,
               campaignImages[0].path,
               Cap,
+              Agente,
               db
             );
           } else {
@@ -130,6 +132,7 @@ class CampaignModel {
               campaignData.Object,
               campaignImages[0].path,
               Cap,
+              Agente,
               db
             );
           }
@@ -170,6 +173,7 @@ class CampaignModel {
                   campaignData.Description,
                   campaignImages[0].path,
                   Cap,
+                  Agente,
                   db
                 );
               } else if (contactType === "business") {
@@ -178,6 +182,7 @@ class CampaignModel {
                   campaignData.Description,
                   campaignImages[0].path,
                   Cap,
+                  Agente,
                   db
                 );
               } else {
@@ -186,6 +191,7 @@ class CampaignModel {
                   campaignData.Description,
                   campaignImages[0].path,
                   Cap,
+                  Agente,
                   db
                 );
               }
@@ -220,6 +226,7 @@ class CampaignModel {
               campaignData.Object,
               campaignImages[0].path,
               Cap,
+              Agente,
               db
             );
           } else if (contactType === "business") {
@@ -229,6 +236,7 @@ class CampaignModel {
               campaignData.Object,
               campaignImages[0].path,
               Cap,
+              Agente,
               db
             );
           } else {
@@ -238,6 +246,7 @@ class CampaignModel {
               campaignData.Object,
               campaignImages[0].path,
               Cap,
+              Agente,
               db
             );
           }
@@ -276,6 +285,7 @@ class CampaignModel {
                     campaignData.Description,
                     campaignImages[0].path,
                     Cap,
+                    Agente,
                     db
                   );
                 } else if (contactType === "business") {
@@ -284,6 +294,7 @@ class CampaignModel {
                     campaignData.Description,
                     campaignImages[0].path,
                     Cap,
+                    Agente,
                     db
                   );
                 } else {
@@ -292,6 +303,7 @@ class CampaignModel {
                     campaignData.Description,
                     campaignImages[0].path,
                     Cap,
+                    Agente,
                     db
                   );
                 }

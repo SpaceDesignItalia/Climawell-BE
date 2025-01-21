@@ -45,10 +45,15 @@ class EmailService {
     object,
     imagePath,
     cap,
+    agente,
     db
   ) {
     try {
-      const contacts = await ContactModel.GetPrivatesByCap(cap, db);
+      const contacts = await ContactModel.GetPrivatesByCapAndAgente(
+        cap,
+        agente,
+        db
+      );
 
       console.log(contacts);
 
@@ -151,10 +156,15 @@ class EmailService {
     object,
     imagePath,
     cap,
+    agente,
     db
   ) {
     try {
-      const companies = await ContactModel.GetCompaniesByCap(cap, db);
+      const companies = await ContactModel.GetCompaniesByCapAndAgente(
+        cap,
+        agente,
+        db
+      );
 
       if (!companies?.length) return;
 
@@ -255,10 +265,15 @@ class EmailService {
     object,
     imagePath,
     cap,
+    agente,
     db
   ) {
     try {
-      const contacts = await ContactModel.GetPrivatesPremiumByCap(cap, db);
+      const contacts = await ContactModel.GetPrivatesPremiumByCapAndAgente(
+        cap,
+        agente,
+        db
+      );
 
       console.log(contacts);
 
@@ -361,10 +376,15 @@ class EmailService {
     object,
     imagePath,
     cap,
+    agente,
     db
   ) {
     try {
-      const companies = await ContactModel.GetCompaniesPremiumByCap(cap, db);
+      const companies = await ContactModel.GetCompaniesPremiumByCapAndAgente(
+        cap,
+        agente,
+        db
+      );
 
       if (!companies?.length) return;
 
@@ -465,6 +485,7 @@ class EmailService {
     object,
     imagePath,
     cap,
+    agente,
     db
   ) {
     this.startPrivatePremiumCampaign(
@@ -473,6 +494,7 @@ class EmailService {
       object,
       imagePath,
       cap,
+      agente,
       db
     );
 
@@ -482,6 +504,7 @@ class EmailService {
       object,
       imagePath,
       cap,
+      agente,
       db
     );
 

@@ -886,6 +886,48 @@ class ProductsModel {
       resolve({ success: true });
     });
   }
+
+  static async getProductsByBrandAndCategory(db, brandId, categoryId) {
+    return new Promise((resolve, reject) => {
+      const query = `
+        SELECT 
+            p.*,
+            c.*,
+            pd."DiscountPercentage",
+            CASE 
+                WHEN fp."ProductId" IS NOT NULL THEN true 
+                ELSE false 
+            END AS "isFeatured",
+            (SELECT pi."ProductImageUrl"
+             FROM "Productimage" pi
+             WHERE pi."ProductId" = p."ProductId"
+             ORDER BY pi."ProductImageId" ASC
+             LIMIT 1) AS "FirstImage",
+            "BrandName"
+        FROM "Product" p
+        LEFT JOIN "Category" c ON p."CategoryId" = c."CategoryId"
+        LEFT JOIN "FeaturedProduct" fp ON p."ProductId" = fp."ProductId"
+        LEFT JOIN "ProductDiscount" pd ON p."ProductId" = pd."ProductId"
+        LEFT JOIN "Brand" b ON p."BrandId" = b."BrandId"
+      `;
+
+      if (brandId && categoryId) {
+        query += `WHERE p."BrandId" = $1 AND p."CategoryId" = $2`;
+      } else if (brandId) {
+        query += `WHERE p."BrandId" = $1`;
+      } else if (categoryId) {
+        query += `WHERE p."CategoryId" = $1`;
+      }
+
+      db.query(query, [brandId, categoryId], (error, result) => {
+        if (error) {
+          reject(error);
+        } else {
+          resolve(result.rows);
+        }
+      });
+    });
+  }
 }
 
 // Funzione di utilità per eliminare i file

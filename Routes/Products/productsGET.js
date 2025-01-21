@@ -58,6 +58,9 @@ const productsGET = (db) => {
   router.get("/UpdateWarehouseValue", (req, res) => {
     ProductsController.updateWarehouseValue(req, res, db);
   });
+  router.get("/GetProductsByBrandAndCategory", (req, res) => {
+    ProductsController.getProductsByBrandAndCategory(req, res, db);
+  });
 
   cron.schedule("55 23 * * *", () => {
     console.log("Aggiornamento del valore del magazzino in corso...");
