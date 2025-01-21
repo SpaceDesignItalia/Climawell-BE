@@ -1,0 +1,59 @@
+name: Deploy Express Project to Plesk via SFTP
+
+on:
+  push:
+    branches:
+      - main # Esegui il deploy solo quando fai push sulla branch "main"
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1: Check out the code
+      - name: Check out code
+        uses: actions/checkout@v2
+
+      # Step 2: Set up Node.js
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: "16" # Usa la versione che preferisci o quella del tuo progetto
+
+      # Step 3: Install dependencies
+      - name: Install dependencies
+        run: npm install
+
+      # Step 4: Upload the project to Plesk via SFTP
+      - name: Upload project to Plesk via SFTP
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.PLESK_SFTP_SERVER }}
+          username: ${{ secrets.PLESK_SFTP_USERNAME }}
+          password: ${{ secrets.PLESK_SFTP_PASSWORD }}
+          port: 22 # Porta SFTP
+          source: "./*" # Carica il contenuto del progetto
+          target: "/var/www/vhosts/climawell.net/api.climawell.net" # Percorso su Plesk
+          rm: false # Non rimuove i file esistenti nella cartella target prima di caricare quelli nuovi
+
+      # Step 5: Execute commands via SSH on Plesk
+      - name: Execute commands via SSH on Plesk
+        uses: appleboy/ssh-action@v0.1.3
+        with:
+          host: ${{ secrets.PLESK_SFTP_SERVER }}
+          username: ${{ secrets.PLESK_SFTP_USERNAME }}
+          password: ${{ secrets.PLESK_SFTP_PASSWORD }}
+          port: 22
+          script: |
+            # Cambia nella directory dell'applicazione
+            cd /var/www/vhosts/climawell.net/api.climawell.net
+
+            # Elimina node_modules e package-lock.json
+            rm -rf node_modules package-lock.json
+
+            # Reinstalla le dipendenze
+            npm install
+
+            # Avvia o riavvia il server con PM2
+            pm2 delete api-climawell || true  # Elimina qualsiasi processo con lo stesso nome (se esiste)
+            pm2 start index.js --name api-climawell --watch  # Avvia il server Express con PM2
