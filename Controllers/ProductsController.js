@@ -382,6 +382,27 @@ class ProductsController {
       res.status(500).send("Aggiunta dei prodotti fallita.");
     }
   }
+
+  static async getProductsByBrandAndCategory(req, res, db) {
+    try {
+      const brandId = req.query.brandId;
+      const categoryId = req.query.categoryId;
+
+      const products = await Products.getProductsByBrandAndCategory(
+        brandId,
+        categoryId,
+        db
+      );
+      if (products) {
+        res.status(200).json(products);
+      } else {
+        res.status(500).send("Recupero dei prodotti fallito");
+      }
+    } catch (error) {
+      console.error("Errore nel recupero dei prodotti:", error);
+      res.status(500).send("Recupero dei prodotti fallito");
+    }
+  }
 }
 
 module.exports = ProductsController;

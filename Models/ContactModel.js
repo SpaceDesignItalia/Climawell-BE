@@ -90,14 +90,14 @@ class ContactModel {
         // Controllo esistenza cliente privato con la stessa email
         const checkEmailQuery = `SELECT COUNT(*) FROM public."Customer" WHERE "CustomerEmail" = $1;`;
         const emailValue = [ContactData.CustomerEmail];
-  
+
         db.query(checkEmailQuery, emailValue, (error, result) => {
           if (error) {
             return reject(error);
           }
-  
+
           const emailExists = parseInt(result.rows[0].count) > 0;
-  
+
           if (emailExists) {
             return reject(new Error("Esiste già un cliente con questa email."));
           }
@@ -125,7 +125,7 @@ class ContactModel {
             ContactData.Cap,
             ContactData.Agente,
           ];
-  
+
           db.query(query, values, (error, result) => {
             if (error) {
               return reject(error);
@@ -137,19 +137,19 @@ class ContactModel {
         // Controllo esistenza azienda con lo stesso nome e Partita IVA
         const checkCompanyQuery = `SELECT COUNT(*) FROM public."Company" WHERE "CompanyName" = $1 AND "CompanyVAT" = $2;`;
         const companyValues = [ContactData.CompanyName, ContactData.CompanyVAT];
-  
+
         db.query(checkCompanyQuery, companyValues, (error, result) => {
           if (error) {
             return reject(error);
           }
-  
+
           const companyExists = parseInt(result.rows[0].count) > 0;
           if (companyExists) {
             return reject(
               new Error("Esiste già un'azienda con questo nome e Partita IVA.")
             );
           }
-  
+
           // Inserimento della nuova azienda
           const query = `INSERT INTO public."Company"(
             "CompanyName", 
@@ -169,7 +169,7 @@ class ContactModel {
             ContactData.Cap,
             ContactData.Agente,
           ];
-  
+
           db.query(query, values, (error, result) => {
             if (error) {
               return reject(error);
@@ -323,63 +323,210 @@ class ContactModel {
     });
   }
 
-  static GetPrivatesByCap(cap, db) {
+  static GetPrivatesByCapAndAgente(cap, agente, db) {
     return new Promise((resolve, reject) => {
-      const query = `SELECT "CustomerId", CONCAT("CustomerName", ' ', "CustomerSurname") AS "CustomerFullName", "CustomerEmail", "CustomerPhone", "PolicyAccepted", "Agente", "Cap" FROM public."Customer" 
-      WHERE "Cap" = $1
-      ORDER BY "CustomerId" ASC `;
+      let query;
+      if (cap && agente) {
+        query = `SELECT "CustomerId", CONCAT("CustomerName", ' ', "CustomerSurname") AS "CustomerFullName", "CustomerEmail", "CustomerPhone", "PolicyAccepted", "Agente", "Cap" FROM public."Customer" 
+          WHERE "Cap" = $1
+          AND "Agente" = $2
+          ORDER BY "CustomerId" ASC `;
 
-      db.query(query, [cap], (error, result) => {
-        if (error) {
-          reject(error);
-        }
-        resolve(result.rows);
-      });
+        db.query(query, [cap, agente], (error, result) => {
+          if (error) {
+            reject(error);
+          }
+          resolve(result.rows);
+        });
+      } else if (cap) {
+        query = `SELECT "CustomerId", CONCAT("CustomerName", ' ', "CustomerSurname") AS "CustomerFullName", "CustomerEmail", "CustomerPhone", "PolicyAccepted", "Agente", "Cap" FROM public."Customer"
+          WHERE "Cap" = $1
+          ORDER BY "CustomerId" ASC `;
+
+        db.query(query, [cap], (error, result) => {
+          if (error) {
+            reject(error);
+          }
+          resolve(result.rows);
+        });
+      } else if (agente) {
+        query = `SELECT "CustomerId", CONCAT("CustomerName", ' ', "CustomerSurname") AS "CustomerFullName", "CustomerEmail", "CustomerPhone", "PolicyAccepted", "Agente", "Cap" FROM public."Customer"
+          WHERE "Agente" = $1
+          ORDER BY "CustomerId" ASC `;
+
+        db.query(query, [agente], (error, result) => {
+          if (error) {
+            reject(error);
+          }
+          resolve(result.rows);
+        });
+      } else {
+        query = `SELECT "CustomerId", CONCAT("CustomerName", ' ', "CustomerSurname") AS "CustomerFullName", "CustomerEmail", "CustomerPhone", "PolicyAccepted", "Agente", "Cap" FROM public."Customer"
+          ORDER BY "CustomerId" ASC `;
+
+        db.query(query, (error, result) => {
+          if (error) {
+            reject(error);
+          }
+          resolve(result.rows);
+        });
+      }
     });
   }
 
-  static GetPrivatesPremiumByCap(cap, db) {
+  static GetPrivatesPremiumByCapAndAgente(cap, agente, db) {
     return new Promise((resolve, reject) => {
-      const query = `SELECT "CustomerId", CONCAT("CustomerName", ' ', "CustomerSurname") AS "CustomerFullName", "CustomerEmail", "CustomerPhone", "PolicyAccepted", "Agente", "Cap" FROM public."Customer" 
-      WHERE "Cap" = $1 AND "IsPremium" = true
-      ORDER BY "CustomerId" ASC `;
+      let query;
+      if (cap && agente) {
+        query = `SELECT "CustomerId", CONCAT("CustomerName", ' ', "CustomerSurname") AS "CustomerFullName", "CustomerEmail", "CustomerPhone", "PolicyAccepted", "Agente", "Cap" FROM public."Customer" 
+          WHERE "Cap" = $1
+          AND "Agente" = $2
+          AND "IsPremium" = true
+          ORDER BY "CustomerId" ASC `;
 
-      db.query(query, [cap], (error, result) => {
-        if (error) {
-          reject(error);
-        }
-        resolve(result.rows);
-      });
+        db.query(query, [cap, agente], (error, result) => {
+          if (error) {
+            reject(error);
+          }
+          resolve(result.rows);
+        });
+      } else if (cap) {
+        query = `SELECT "CustomerId", CONCAT("CustomerName", ' ', "CustomerSurname") AS "CustomerFullName", "CustomerEmail", "CustomerPhone", "PolicyAccepted", "Agente", "Cap" FROM public."Customer"
+          WHERE "Cap" = $1
+          AND "IsPremium" = true
+          ORDER BY "CustomerId" ASC `;
+
+        db.query(query, [cap], (error, result) => {
+          if (error) {
+            reject(error);
+          }
+          resolve(result.rows);
+        });
+      } else if (agente) {
+        query = `SELECT "CustomerId", CONCAT("CustomerName", ' ', "CustomerSurname") AS "CustomerFullName", "CustomerEmail", "CustomerPhone", "PolicyAccepted", "Agente", "Cap" FROM public."Customer"
+          WHERE "Agente" = $1
+          AND "IsPremium" = true
+          ORDER BY "CustomerId" ASC `;
+
+        db.query(query, [agente], (error, result) => {
+          if (error) {
+            reject(error);
+          }
+          resolve(result.rows);
+        });
+      } else {
+        query = `SELECT "CustomerId", CONCAT("CustomerName", ' ', "CustomerSurname") AS "CustomerFullName", "CustomerEmail", "CustomerPhone", "PolicyAccepted", "Agente", "Cap" FROM public."Customer"
+          WHERE "IsPremium" = true
+          ORDER BY "CustomerId" ASC `;
+
+        db.query(query, (error, result) => {
+          if (error) {
+            reject(error);
+          }
+          resolve(result.rows);
+        });
+      }
     });
   }
 
-  static GetCompaniesByCap(cap, db) {
+  static GetCompaniesByCapAndAgente(cap, agente, db) {
     return new Promise((resolve, reject) => {
-      const query = `SELECT * FROM public."Company" 
-      WHERE "Cap" = $1
-      ORDER BY "CompanyId" ASC `;
+      let query;
+      if (cap && agente) {
+        query = `SELECT * FROM public."Company" 
+        WHERE "Cap" = $1 AND "Agente" = $2
+        ORDER BY "CompanyId" ASC `;
 
-      db.query(query, [cap], (error, result) => {
-        if (error) {
-          reject(error);
-        }
-        resolve(result.rows);
-      });
+        db.query(query, [cap, agente], (error, result) => {
+          if (error) {
+            reject(error);
+          }
+          resolve(result.rows);
+        });
+      } else if (cap) {
+        query = `SELECT * FROM public."Company" 
+        WHERE "Cap" = $1
+        ORDER BY "CompanyId" ASC `;
+
+        db.query(query, [cap], (error, result) => {
+          if (error) {
+            reject(error);
+          }
+          resolve(result.rows);
+        });
+      } else if (agente) {
+        query = `SELECT * FROM public."Company" 
+        WHERE "Agente" = $1
+        ORDER BY "CompanyId" ASC `;
+
+        db.query(query, [agente], (error, result) => {
+          if (error) {
+            reject(error);
+          }
+          resolve(result.rows);
+        });
+      } else {
+        query = `SELECT * FROM public."Company" 
+        ORDER BY "CompanyId" ASC `;
+
+        db.query(query, (error, result) => {
+          if (error) {
+            reject(error);
+          }
+          resolve(result.rows);
+        });
+      }
     });
   }
 
-  static GetCompaniesPremiumByCap(cap, db) {
+  static GetCompaniesPremiumByCapAndAgente(cap, agente, db) {
     return new Promise((resolve, reject) => {
-      const query = `SELECT * FROM public."Company" 
-      WHERE "Cap" = $1 AND "IsPremium" = true
-      ORDER BY "CompanyId" ASC `;
+      let query;
+      if (cap && agente) {
+        query = `SELECT * FROM public."Company" 
+        WHERE "Cap" = $1 AND "Agente" = $2 AND "IsPremium" = true
+        ORDER BY "CompanyId" ASC `;
 
-      db.query(query, [cap], (error, result) => {
-        if (error) {
-          reject(error);
-        }
-        resolve(result.rows);
-      });
+        db.query(query, [cap, agente], (error, result) => {
+          if (error) {
+            reject(error);
+          }
+          resolve(result.rows);
+        });
+      } else if (cap) {
+        query = `SELECT * FROM public."Company" 
+        WHERE "Cap" = $1 AND "IsPremium" = true
+        ORDER BY "CompanyId" ASC `;
+
+        db.query(query, [cap], (error, result) => {
+          if (error) {
+            reject(error);
+          }
+          resolve(result.rows);
+        });
+      } else if (agente) {
+        query = `SELECT * FROM public."Company" 
+        WHERE "Agente" = $1 AND "IsPremium" = true
+        ORDER BY "CompanyId" ASC `;
+
+        db.query(query, [agente], (error, result) => {
+          if (error) {
+            reject(error);
+          }
+          resolve(result.rows);
+        });
+      } else {
+        query = `SELECT * FROM public."Company" 
+        WHERE "IsPremium" = true
+        ORDER BY "CompanyId" ASC `;
+
+        db.query(query, (error, result) => {
+          if (error) {
+            reject(error);
+          }
+          resolve(result.rows);
+        });
+      }
     });
   }
 
