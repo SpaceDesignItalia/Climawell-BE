@@ -37,6 +37,8 @@ app.use(
       "http://localhost:5173",
       "http://localhost:5174",
       "https://climawell.net",
+      "https://marketing.climawell.net",
+      "https://dashboard.climawell.net",
       "https://www.climawell.net",
     ], // Aggiorna con gli URL HTTPS
     credentials: true,
