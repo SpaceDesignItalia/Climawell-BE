@@ -323,46 +323,178 @@ class ContactModel {
     });
   }
 
-  static GetPrivatesByCapAndAgente(cap, agente, db) {
+  static GetPrivatesByCapAndAgente(capList, agenteList, db) {
+    console.log(capList, agenteList);
+
     return new Promise((resolve, reject) => {
+      // Se capList è una stringa, proviamo a parsarla
+      if (typeof capList === "string") {
+        try {
+          capList = JSON.parse(capList); // Parsiamo la stringa JSON
+        } catch (error) {
+          return reject(new Error("Invalid JSON format in capList"));
+        }
+      }
+
+      // Se agenteList è una stringa, proviamo a parsarla
+      if (typeof agenteList === "string") {
+        try {
+          agenteList = JSON.parse(agenteList); // Parsiamo la stringa JSON
+        } catch (error) {
+          return reject(new Error("Invalid JSON format in agenteList"));
+        }
+      }
+
+      // Se capList e agenteList non sono array, ritorniamo errore
+      if (!Array.isArray(capList) || !Array.isArray(agenteList)) {
+        return reject(new Error("Both capList and agenteList must be arrays"));
+      }
+
+      // Estrai i CAP e gli agenti dalle rispettive liste
+      const capValues = capList.map((entry) => `'${entry.Cap}'`); // Aggiungiamo le virgolette
+      const agenteValues = agenteList.map((agent) => `'${agent.code}'`); // Aggiungiamo le virgolette
+
       let query;
-      if (cap && agente) {
-        query = `SELECT "CustomerId", CONCAT("CustomerName", ' ', "CustomerSurname") AS "CustomerFullName", "CustomerEmail", "CustomerPhone", "PolicyAccepted", "Agente", "Cap" FROM public."Customer" 
-          WHERE "Cap" = $1
-          AND "Agente" = $2
-          ORDER BY "CustomerId" ASC `;
 
-        db.query(query, [cap, agente], (error, result) => {
+      // Se entrambi capList e agenteList sono forniti
+      if (capValues.length > 0 && agenteValues.length > 0) {
+        query = `SELECT "CustomerId", CONCAT("CustomerName", ' ', "CustomerSurname") AS "CustomerFullName", "CustomerEmail", "CustomerPhone", "PolicyAccepted", "Agente", "Cap"
+                      FROM public."Customer"
+                      INNER JOIN public."Cap" ON "Customer"."Cap" = "Cap"."cap"
+                      WHERE ("Cap" IN (${capValues}) OR "generalCap" IN (${capValues}))
+                      AND "Agente" IN (${agenteValues})
+                      ORDER BY "CustomerId" ASC`;
+        console.log(query);
+        db.query(query, (error, result) => {
           if (error) {
             reject(error);
           }
           resolve(result.rows);
         });
-      } else if (cap) {
-        query = `SELECT "CustomerId", CONCAT("CustomerName", ' ', "CustomerSurname") AS "CustomerFullName", "CustomerEmail", "CustomerPhone", "PolicyAccepted", "Agente", "Cap" FROM public."Customer"
-          WHERE "Cap" = $1
-          ORDER BY "CustomerId" ASC `;
-
-        db.query(query, [cap], (error, result) => {
+      } else if (capValues.length > 0) {
+        // Se solo capList è fornita
+        query = `SELECT "CustomerId", CONCAT("CustomerName", ' ', "CustomerSurname") AS "CustomerFullName", "CustomerEmail", "CustomerPhone", "PolicyAccepted", "Agente", "Cap"
+                      FROM public."Customer"
+                      INNER JOIN public."Cap" ON "Customer"."Cap" = "Cap"."cap"
+                      WHERE "Cap" IN ($1) OR "generalCap" IN ($1)
+                      ORDER BY "CustomerId" ASC`;
+        db.query(query, [capValues], (error, result) => {
           if (error) {
             reject(error);
           }
           resolve(result.rows);
         });
-      } else if (agente) {
-        query = `SELECT "CustomerId", CONCAT("CustomerName", ' ', "CustomerSurname") AS "CustomerFullName", "CustomerEmail", "CustomerPhone", "PolicyAccepted", "Agente", "Cap" FROM public."Customer"
-          WHERE "Agente" = $1
-          ORDER BY "CustomerId" ASC `;
-
-        db.query(query, [agente], (error, result) => {
+      } else if (agenteValues.length > 0) {
+        // Se solo agenteList è fornita
+        query = `SELECT "CustomerId", CONCAT("CustomerName", ' ', "CustomerSurname") AS "CustomerFullName", "CustomerEmail", "CustomerPhone", "PolicyAccepted", "Agente", "Cap"
+                      FROM public."Customer"
+                      WHERE "Agente" IN ($1)
+                      ORDER BY "CustomerId" ASC`;
+        db.query(query, [agenteValues], (error, result) => {
           if (error) {
             reject(error);
           }
           resolve(result.rows);
         });
       } else {
-        query = `SELECT "CustomerId", CONCAT("CustomerName", ' ', "CustomerSurname") AS "CustomerFullName", "CustomerEmail", "CustomerPhone", "PolicyAccepted", "Agente", "Cap" FROM public."Customer"
-          ORDER BY "CustomerId" ASC `;
+        // Se nessun parametro è fornito, restituisci tutti i record
+        query = `SELECT "CustomerId", CONCAT("CustomerName", ' ', "CustomerSurname") AS "CustomerFullName", "CustomerEmail", "CustomerPhone", "PolicyAccepted", "Agente", "Cap"
+                      FROM public."Customer"
+                      ORDER BY "CustomerId" ASC`;
+        db.query(query, (error, result) => {
+          if (error) {
+            reject(error);
+          }
+          resolve(result.rows);
+        });
+      }
+    });
+  }
+
+  static GetPrivatesPremiumByCapAndAgente(capList, agenteList, db) {
+    return new Promise((resolve, reject) => {
+      // Se capList è una stringa, proviamo a parsarla
+      if (typeof capList === "string") {
+        try {
+          capList = JSON.parse(capList); // Parsiamo la stringa JSON
+        } catch (error) {
+          return reject(new Error("Invalid JSON format in capList"));
+        }
+      }
+
+      // Se agenteList è una stringa, proviamo a parsarla
+      if (typeof agenteList === "string") {
+        try {
+          agenteList = JSON.parse(agenteList); // Parsiamo la stringa JSON
+        } catch (error) {
+          return reject(new Error("Invalid JSON format in agenteList"));
+        }
+      }
+
+      // Se capList e agenteList non sono array, ritorniamo errore
+      if (!Array.isArray(capList) || !Array.isArray(agenteList)) {
+        return reject(new Error("Both capList and agenteList must be arrays"));
+      }
+
+      // Estrai i CAP e gli agenti dalle rispettive liste
+      const capValues = capList.map((entry) => `'${entry.Cap}'`); // Aggiungiamo le virgolette
+      const agenteValues = agenteList.map((agent) => `'${agent.code}'`); // Aggiungiamo le virgolette
+
+      let query;
+
+      // Se entrambi capList e agenteList sono forniti
+      if (capValues.length > 0 && agenteValues.length > 0) {
+        query = `SELECT "CustomerId", CONCAT("CustomerName", ' ', "CustomerSurname") AS "CustomerFullName", 
+                        "CustomerEmail", "CustomerPhone", "PolicyAccepted", "Agente", "Cap" 
+                 FROM public."Customer"
+                 WHERE "Cap" IN (${capValues}) OR "generalCap" IN (${capValues})
+                 AND "Agente" IN (${agenteValues})
+                 AND "IsPremium" = true
+                 ORDER BY "CustomerId" ASC`;
+
+        db.query(query, (error, result) => {
+          if (error) {
+            reject(error);
+          }
+          resolve(result.rows);
+        });
+      } else if (capValues.length > 0) {
+        // Se solo capList è fornita
+        query = `SELECT "CustomerId", CONCAT("CustomerName", ' ', "CustomerSurname") AS "CustomerFullName", 
+                        "CustomerEmail", "CustomerPhone", "PolicyAccepted", "Agente", "Cap" 
+                 FROM public."Customer"
+                 WHERE "Cap" IN (${capValues}) OR "generalCap" IN (${capValues})
+                 AND "IsPremium" = true
+                 ORDER BY "CustomerId" ASC`;
+
+        db.query(query, (error, result) => {
+          if (error) {
+            reject(error);
+          }
+          resolve(result.rows);
+        });
+      } else if (agenteValues.length > 0) {
+        // Se solo agenteList è fornita
+        query = `SELECT "CustomerId", CONCAT("CustomerName", ' ', "CustomerSurname") AS "CustomerFullName", 
+                        "CustomerEmail", "CustomerPhone", "PolicyAccepted", "Agente", "Cap" 
+                 FROM public."Customer"
+                 WHERE "Agente" IN (${agenteValues})
+                 AND "IsPremium" = true
+                 ORDER BY "CustomerId" ASC`;
+
+        db.query(query, (error, result) => {
+          if (error) {
+            reject(error);
+          }
+          resolve(result.rows);
+        });
+      } else {
+        // Se nessun parametro è fornito, restituisci tutti i record
+        query = `SELECT "CustomerId", CONCAT("CustomerName", ' ', "CustomerSurname") AS "CustomerFullName", 
+                        "CustomerEmail", "CustomerPhone", "PolicyAccepted", "Agente", "Cap" 
+                 FROM public."Customer"
+                 WHERE "IsPremium" = true
+                 ORDER BY "CustomerId" ASC`;
 
         db.query(query, (error, result) => {
           if (error) {
@@ -374,50 +506,77 @@ class ContactModel {
     });
   }
 
-  static GetPrivatesPremiumByCapAndAgente(cap, agente, db) {
+  static GetCompaniesByCapAndAgente(capList, agenteList, db) {
     return new Promise((resolve, reject) => {
+      // Se capList è una stringa, proviamo a parsarla
+      if (typeof capList === "string") {
+        try {
+          capList = JSON.parse(capList); // Parsiamo la stringa JSON
+        } catch (error) {
+          return reject(new Error("Invalid JSON format in capList"));
+        }
+      }
+
+      // Se agenteList è una stringa, proviamo a parsarla
+      if (typeof agenteList === "string") {
+        try {
+          agenteList = JSON.parse(agenteList); // Parsiamo la stringa JSON
+        } catch (error) {
+          return reject(new Error("Invalid JSON format in agenteList"));
+        }
+      }
+
+      // Se capList e agenteList non sono array, ritorniamo errore
+      if (!Array.isArray(capList) || !Array.isArray(agenteList)) {
+        return reject(new Error("Both capList and agenteList must be arrays"));
+      }
+
+      // Estrai i CAP e gli agenti dalle rispettive liste
+      const capValues = capList.map((entry) => `'${entry.Cap}'`); // Aggiungiamo le virgolette
+      const agenteValues = agenteList.map((agent) => `'${agent.code}'`); // Aggiungiamo le virgolette
+
       let query;
-      if (cap && agente) {
-        query = `SELECT "CustomerId", CONCAT("CustomerName", ' ', "CustomerSurname") AS "CustomerFullName", "CustomerEmail", "CustomerPhone", "PolicyAccepted", "Agente", "Cap" FROM public."Customer" 
-          WHERE "Cap" = $1
-          AND "Agente" = $2
-          AND "IsPremium" = true
-          ORDER BY "CustomerId" ASC `;
 
-        db.query(query, [cap, agente], (error, result) => {
+      // Se entrambi capList e agenteList sono forniti
+      if (capValues.length > 0 && agenteValues.length > 0) {
+        query = `SELECT * FROM public."Company" 
+                 WHERE "Cap" IN (${capValues}) AND "Agente" IN (${agenteValues})
+                 ORDER BY "CompanyId" ASC`;
+
+        db.query(query, (error, result) => {
           if (error) {
             reject(error);
           }
           resolve(result.rows);
         });
-      } else if (cap) {
-        query = `SELECT "CustomerId", CONCAT("CustomerName", ' ', "CustomerSurname") AS "CustomerFullName", "CustomerEmail", "CustomerPhone", "PolicyAccepted", "Agente", "Cap" FROM public."Customer"
-          WHERE "Cap" = $1
-          AND "IsPremium" = true
-          ORDER BY "CustomerId" ASC `;
+      } else if (capValues.length > 0) {
+        // Se solo capList è fornita
+        query = `SELECT * FROM public."Company" 
+                 WHERE "Cap" IN (${capValues})
+                 ORDER BY "CompanyId" ASC`;
 
-        db.query(query, [cap], (error, result) => {
+        db.query(query, (error, result) => {
           if (error) {
             reject(error);
           }
           resolve(result.rows);
         });
-      } else if (agente) {
-        query = `SELECT "CustomerId", CONCAT("CustomerName", ' ', "CustomerSurname") AS "CustomerFullName", "CustomerEmail", "CustomerPhone", "PolicyAccepted", "Agente", "Cap" FROM public."Customer"
-          WHERE "Agente" = $1
-          AND "IsPremium" = true
-          ORDER BY "CustomerId" ASC `;
+      } else if (agenteValues.length > 0) {
+        // Se solo agenteList è fornita
+        query = `SELECT * FROM public."Company" 
+                 WHERE "Agente" IN (${agenteValues})
+                 ORDER BY "CompanyId" ASC`;
 
-        db.query(query, [agente], (error, result) => {
+        db.query(query, (error, result) => {
           if (error) {
             reject(error);
           }
           resolve(result.rows);
         });
       } else {
-        query = `SELECT "CustomerId", CONCAT("CustomerName", ' ', "CustomerSurname") AS "CustomerFullName", "CustomerEmail", "CustomerPhone", "PolicyAccepted", "Agente", "Cap" FROM public."Customer"
-          WHERE "IsPremium" = true
-          ORDER BY "CustomerId" ASC `;
+        // Se nessun parametro è fornito, restituisci tutti i record
+        query = `SELECT * FROM public."Company" 
+                 ORDER BY "CompanyId" ASC`;
 
         db.query(query, (error, result) => {
           if (error) {
@@ -429,45 +588,43 @@ class ContactModel {
     });
   }
 
-  static GetCompaniesByCapAndAgente(cap, agente, db) {
+  static GetCompaniesPremiumByCapAndAgente(capList, agenteList, db) {
     return new Promise((resolve, reject) => {
+      // Se capList è una stringa, proviamo a parsarla
+      if (typeof capList === "string") {
+        try {
+          capList = JSON.parse(capList); // Parsiamo la stringa JSON
+        } catch (error) {
+          return reject(new Error("Invalid JSON format in capList"));
+        }
+      }
+
+      // Se agenteList è una stringa, proviamo a parsarla
+      if (typeof agenteList === "string") {
+        try {
+          agenteList = JSON.parse(agenteList); // Parsiamo la stringa JSON
+        } catch (error) {
+          return reject(new Error("Invalid JSON format in agenteList"));
+        }
+      }
+
+      // Se capList e agenteList non sono array, ritorniamo errore
+      if (!Array.isArray(capList) || !Array.isArray(agenteList)) {
+        return reject(new Error("Both capList and agenteList must be arrays"));
+      }
+
+      // Estrai i CAP e gli agenti dalle rispettive liste
+      const capValues = capList.map((entry) => `'${entry.Cap}'`); // Aggiungiamo le virgolette
+      const agenteValues = agenteList.map((agent) => `'${agent.code}'`); // Aggiungiamo le virgolette
+
       let query;
-      if (cap && agente) {
-        query = `SELECT * FROM public."Company" 
-        WHERE "Cap" = $1 AND "Agente" = $2
-        ORDER BY "CompanyId" ASC `;
 
-        db.query(query, [cap, agente], (error, result) => {
-          if (error) {
-            reject(error);
-          }
-          resolve(result.rows);
-        });
-      } else if (cap) {
+      // Se entrambi capList e agenteList sono forniti
+      if (capValues.length > 0 && agenteValues.length > 0) {
         query = `SELECT * FROM public."Company" 
-        WHERE "Cap" = $1
-        ORDER BY "CompanyId" ASC `;
-
-        db.query(query, [cap], (error, result) => {
-          if (error) {
-            reject(error);
-          }
-          resolve(result.rows);
-        });
-      } else if (agente) {
-        query = `SELECT * FROM public."Company" 
-        WHERE "Agente" = $1
-        ORDER BY "CompanyId" ASC `;
-
-        db.query(query, [agente], (error, result) => {
-          if (error) {
-            reject(error);
-          }
-          resolve(result.rows);
-        });
-      } else {
-        query = `SELECT * FROM public."Company" 
-        ORDER BY "CompanyId" ASC `;
+                 WHERE "Cap" IN (${capValues}) AND "Agente" IN (${agenteValues}) 
+                 AND "IsPremium" = true
+                 ORDER BY "CompanyId" ASC`;
 
         db.query(query, (error, result) => {
           if (error) {
@@ -475,50 +632,37 @@ class ContactModel {
           }
           resolve(result.rows);
         });
-      }
-    });
-  }
-
-  static GetCompaniesPremiumByCapAndAgente(cap, agente, db) {
-    return new Promise((resolve, reject) => {
-      let query;
-      if (cap && agente) {
+      } else if (capValues.length > 0) {
+        // Se solo capList è fornita
         query = `SELECT * FROM public."Company" 
-        WHERE "Cap" = $1 AND "Agente" = $2 AND "IsPremium" = true
-        ORDER BY "CompanyId" ASC `;
+                 WHERE "Cap" IN (${capValues}) 
+                 AND "IsPremium" = true
+                 ORDER BY "CompanyId" ASC`;
 
-        db.query(query, [cap, agente], (error, result) => {
+        db.query(query, (error, result) => {
           if (error) {
             reject(error);
           }
           resolve(result.rows);
         });
-      } else if (cap) {
+      } else if (agenteValues.length > 0) {
+        // Se solo agenteList è fornita
         query = `SELECT * FROM public."Company" 
-        WHERE "Cap" = $1 AND "IsPremium" = true
-        ORDER BY "CompanyId" ASC `;
+                 WHERE "Agente" IN (${agenteValues})
+                 AND "IsPremium" = true
+                 ORDER BY "CompanyId" ASC`;
 
-        db.query(query, [cap], (error, result) => {
-          if (error) {
-            reject(error);
-          }
-          resolve(result.rows);
-        });
-      } else if (agente) {
-        query = `SELECT * FROM public."Company" 
-        WHERE "Agente" = $1 AND "IsPremium" = true
-        ORDER BY "CompanyId" ASC `;
-
-        db.query(query, [agente], (error, result) => {
+        db.query(query, (error, result) => {
           if (error) {
             reject(error);
           }
           resolve(result.rows);
         });
       } else {
+        // Se nessun parametro è fornito, restituisci tutti i record
         query = `SELECT * FROM public."Company" 
-        WHERE "IsPremium" = true
-        ORDER BY "CompanyId" ASC `;
+                 WHERE "IsPremium" = true
+                 ORDER BY "CompanyId" ASC`;
 
         db.query(query, (error, result) => {
           if (error) {
