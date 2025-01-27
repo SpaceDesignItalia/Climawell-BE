@@ -76,7 +76,7 @@ class Messages {
 
       try {
         const response = await axios({
-          url: "https://graph.facebook.com/v21.0/522369940963643/messages",
+          url: "https://graph.facebook.com/v21.0/544175122111846/messages",
           method: "post",
           headers: {
             Authorization: `Bearer ${process.env.WHATSAPP_TOKEN}`,
@@ -214,7 +214,7 @@ class Messages {
 
       try {
         const response = await axios({
-          url: "https://graph.facebook.com/v21.0/522369940963643/messages",
+          url: "https://graph.facebook.com/v21.0/544175122111846/messages",
           method: "post",
           headers: {
             Authorization: `Bearer ${process.env.WHATSAPP_TOKEN}`,
@@ -363,7 +363,7 @@ class Messages {
 
       try {
         const response = await axios({
-          url: "https://graph.facebook.com/v21.0/522369940963643/messages",
+          url: "https://graph.facebook.com/v21.0/544175122111846/messages",
           method: "post",
           headers: {
             Authorization: `Bearer ${process.env.WHATSAPP_TOKEN}`,
@@ -511,7 +511,7 @@ class Messages {
 
       try {
         const response = await axios({
-          url: "https://graph.facebook.com/v21.0/522369940963643/messages",
+          url: "https://graph.facebook.com/v21.0/544175122111846/messages",
           method: "post",
           headers: {
             Authorization: `Bearer ${process.env.WHATSAPP_TOKEN}`,
@@ -660,7 +660,7 @@ class Messages {
 
       try {
         const response = await axios({
-          url: "https://graph.facebook.com/v21.0/522369940963643/messages",
+          url: "https://graph.facebook.com/v21.0/544175122111846/messages",
           method: "post",
           headers: {
             Authorization: `Bearer ${process.env.WHATSAPP_TOKEN}`,
@@ -747,7 +747,7 @@ async function uploadImage(imagePath) {
 
   try {
     const response = await axios({
-      url: "https://graph.facebook.com/v21.0/522369940963643/media",
+      url: "https://graph.facebook.com/v21.0/544175122111846/media",
       method: "post",
       headers: {
         Authorization: `Bearer ${process.env.WHATSAPP_TOKEN}`,
