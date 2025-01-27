@@ -4,7 +4,7 @@ const path = require("path");
 const ContactModel = require("../../Models/ContactModel");
 
 const mailData = {
-  mail: "noreply@spacedesign-italia.it",
+  mail: "marketing@climawell.net",
   pass: "@Gemellini04",
 };
 
