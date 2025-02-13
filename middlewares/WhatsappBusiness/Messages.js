@@ -84,7 +84,9 @@ class Messages {
     for (const contact of contacts) {
       const name = contact.CustomerFullName;
       const phoneNumber = contact.CustomerPhone;
-
+      if (!phoneNumber) {
+        continue;
+      }
       try {
         const response = await axios({
           url: "https://graph.facebook.com/v21.0/544175122111846/messages",
@@ -233,7 +235,9 @@ class Messages {
     for (const contact of contacts) {
       const name = contact.CompanyName;
       const phoneNumber = contact.CompanyPhone;
-
+      if (!phoneNumber) {
+        continue;
+      }
       try {
         const response = await axios({
           url: "https://graph.facebook.com/v21.0/544175122111846/messages",
@@ -387,6 +391,9 @@ class Messages {
     for (const contact of contacts) {
       const name = contact.CustomerFullName;
       const phoneNumber = contact.CustomerPhone;
+      if (!phoneNumber) {
+        continue;
+      }
 
       try {
         const response = await axios({
@@ -540,7 +547,9 @@ class Messages {
     for (const contact of contacts) {
       const name = contact.CustomerFullName;
       const phoneNumber = contact.CustomerPhone;
-
+      if (!phoneNumber) {
+        continue;
+      }
       try {
         const response = await axios({
           url: "https://graph.facebook.com/v21.0/544175122111846/messages",
@@ -694,7 +703,9 @@ class Messages {
     for (const contact of contacts) {
       const name = contact.CompanyName;
       const phoneNumber = contact.CompanyPhone;
-
+      if (!phoneNumber) {
+        continue;
+      }
       try {
         const response = await axios({
           url: "https://graph.facebook.com/v21.0/544175122111846/messages",
