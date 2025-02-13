@@ -4,14 +4,25 @@ require("dotenv").config();
 const fs = require("fs");
 
 class Messages {
-  static async sendPrivateMessage(title, description, imagePath, cap, db) {
+  static async sendPrivateMessage(
+    title,
+    description,
+    imagePath,
+    cap,
+    Agente,
+    db
+  ) {
     console.log("Inizio l'invio dei messaggi privati.");
 
     // Carica l'immagine richiesta
     const imageId = await uploadImage(imagePath);
 
     // Ottieni tutti i contatti privati dal database
-    const contacts = await ContactModel.GetPrivatesByCap(cap, db);
+    const contacts = await ContactModel.GetPrivatesByCapAndAgente(
+      cap,
+      Agente,
+      db
+    );
 
     if (contacts.length > 250) {
       console.log("I contatti sono più di 250. Gestione a batch attivata.");
@@ -138,14 +149,25 @@ class Messages {
     }
   }
 
-  static async sendCompanyMessage(title, description, imagePath, cap, db) {
+  static async sendCompanyMessage(
+    title,
+    description,
+    imagePath,
+    cap,
+    Agente,
+    db
+  ) {
     console.log("Inizio l'invio dei messaggi alle aziende.");
 
     // Carica l'immagine richiesta
     const imageId = await uploadImage(imagePath);
 
     // Ottieni tutti i contatti aziendali dal database
-    const contacts = await ContactModel.GetCompaniesByCap(cap, db);
+    const contacts = await ContactModel.GetCompaniesByCapAndAgente(
+      cap,
+      Agente,
+      db
+    );
 
     if (contacts.length > 250) {
       console.log("I contatti sono più di 250. Gestione a batch attivata.");
@@ -281,6 +303,7 @@ class Messages {
     description,
     imagePath,
     cap,
+    Agente,
     db
   ) {
     console.log("Inizio l'invio dei messaggi privati premium.");
@@ -289,7 +312,11 @@ class Messages {
     const imageId = await uploadImage(imagePath);
 
     // Ottieni tutti i contatti privati premium dal database
-    const contacts = await ContactModel.GetPrivatesPremiumByCap(cap, db);
+    const contacts = await ContactModel.GetPrivatesPremiumByCapAndAgente(
+      cap,
+      Agente,
+      db
+    );
 
     if (contacts.length > 250) {
       console.log("I contatti sono più di 250. Gestione a batch attivata.");
@@ -429,6 +456,7 @@ class Messages {
     description,
     imagePath,
     cap,
+    Agente,
     db
   ) {
     console.log("Inizio l'invio dei messaggi privati premium.");
@@ -437,7 +465,11 @@ class Messages {
     const imageId = await uploadImage(imagePath);
 
     // Ottieni tutti i contatti privati premium dal database
-    const contacts = await ContactModel.GetPrivatesPremiumByCap(cap, db);
+    const contacts = await ContactModel.GetPrivatesPremiumByCapAndAgente(
+      cap,
+      Agente,
+      db
+    );
 
     if (contacts.length > 250) {
       console.log("I contatti sono più di 250. Gestione a batch attivata.");
@@ -578,6 +610,7 @@ class Messages {
     description,
     imagePath,
     cap,
+    Agente,
     db
   ) {
     console.log("Inizio l'invio dei messaggi premium alle aziende.");
@@ -586,7 +619,11 @@ class Messages {
     const imageId = await uploadImage(imagePath);
 
     // Ottieni tutti i contatti aziendali premium dal database
-    const contacts = await ContactModel.GetCompaniesPremiumByCap(cap, db);
+    const contacts = await ContactModel.GetCompaniesPremiumByCapAndAgente(
+      cap,
+      Agente,
+      db
+    );
 
     if (contacts.length > 250) {
       console.log("I contatti sono più di 250. Gestione a batch attivata.");
@@ -722,15 +759,36 @@ class Messages {
     }
   }
 
-  static async sendPremiumMessage(title, description, imagePath, cap, db) {
+  static async sendPremiumMessage(
+    title,
+    description,
+    imagePath,
+    cap,
+    Agente,
+    db
+  ) {
     console.log(
       "Inizio l'invio di tutti i messaggi premium (privati e aziende)."
     );
 
     // Avvia l'invio dei messaggi premium privati e aziendali in parallelo
     await Promise.all([
-      this.sendPrivatePremiumMessage(title, description, imagePath, cap, db),
-      this.sendCompanyPremiumMessage(title, description, imagePath, cap, db),
+      this.sendPrivatePremiumMessage(
+        title,
+        description,
+        imagePath,
+        cap,
+        Agente,
+        db
+      ),
+      this.sendCompanyPremiumMessage(
+        title,
+        description,
+        imagePath,
+        cap,
+        Agente,
+        db
+      ),
     ]);
 
     console.log("Tutti i messaggi premium sono stati inviati.");
