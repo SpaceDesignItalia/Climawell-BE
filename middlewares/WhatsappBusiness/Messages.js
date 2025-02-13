@@ -100,7 +100,7 @@ class Messages {
             to: "39" + phoneNumber, // Prefisso italiano e numero di telefono
             type: "template",
             template: {
-              name: "climawellm",
+              name: "marketing",
               components: [
                 {
                   type: "header",
@@ -251,7 +251,7 @@ class Messages {
             to: "39" + phoneNumber, // Prefisso italiano e numero di telefono
             type: "template",
             template: {
-              name: "climawellm",
+              name: "marketing",
               language: {
                 code: "it",
               },
@@ -408,7 +408,7 @@ class Messages {
             to: "39" + phoneNumber, // Prefisso italiano e numero di telefono
             type: "template",
             template: {
-              name: "climawellm",
+              name: "marketing",
               language: {
                 code: "it",
               },
@@ -563,7 +563,7 @@ class Messages {
             to: "39" + phoneNumber, // Prefisso italiano e numero di telefono
             type: "template",
             template: {
-              name: "climawellm",
+              name: "marketing",
               language: {
                 code: "it",
               },
@@ -719,7 +719,7 @@ class Messages {
             to: "39" + phoneNumber, // Prefisso italiano e numero di telefono
             type: "template",
             template: {
-              name: "climawellm",
+              name: "marketing",
               language: {
                 code: "it",
               },
