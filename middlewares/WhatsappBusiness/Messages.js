@@ -107,7 +107,7 @@ class Messages {
             template: {
               name: "hello_world",
               language: {
-                code: "en",
+                code: "en_US",
               },
             },
           }),
