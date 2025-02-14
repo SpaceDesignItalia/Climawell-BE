@@ -111,17 +111,6 @@ class Messages {
               },
               components: [
                 {
-                  type: "header",
-                  parameters: [
-                    {
-                      type: "image",
-                      image: {
-                        id: imageId, // ID immagine già caricato
-                      },
-                    },
-                  ],
-                },
-                {
                   type: "body",
                   parameters: [
                     {
