@@ -74,7 +74,12 @@ class Messages {
       console.log("Tutti i messaggi sono stati inviati.");
     } else {
       // Se i contatti sono meno di 250, invia tutto direttamente
-      await this.sendBatchMessages(contacts, title, description, imageId);
+      await this.sendBatchPrivateMessages(
+        contacts,
+        title,
+        description,
+        imageId
+      );
       console.log("Tutti i messaggi sono stati inviati.");
     }
   }
