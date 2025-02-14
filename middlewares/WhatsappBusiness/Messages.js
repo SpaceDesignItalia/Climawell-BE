@@ -105,7 +105,7 @@ class Messages {
             to: "39" + phoneNumber, // Prefisso italiano e numero di telefono
             type: "template",
             template: {
-              name: "climam",
+              name: "climawellmarketingtemplate",
               language: {
                 code: "en_US",
               },
@@ -256,7 +256,7 @@ class Messages {
             to: "39" + phoneNumber, // Prefisso italiano e numero di telefono
             type: "template",
             template: {
-              name: "climam",
+              name: "climawellmarketingtemplate",
               language: {
                 code: "en_US",
               },
@@ -492,7 +492,7 @@ class Messages {
             to: "39" + phoneNumber, // Prefisso italiano e numero di telefono
             type: "template",
             template: {
-              name: "climam",
+              name: "climawellmarketingtemplate",
               language: {
                 code: "en_US",
               },
@@ -648,7 +648,7 @@ class Messages {
             to: "39" + phoneNumber, // Prefisso italiano e numero di telefono
             type: "template",
             template: {
-              name: "climam",
+              name: "climawellmarketingtemplate",
               language: {
                 code: "en_US",
               },
