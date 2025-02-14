@@ -100,37 +100,7 @@ class Messages {
             to: "39" + phoneNumber, // Prefisso italiano e numero di telefono
             type: "template",
             template: {
-              name: "climam",
-              components: [
-                {
-                  type: "header",
-                  parameters: [
-                    {
-                      type: "image",
-                      image: {
-                        id: imageId, // ID immagine già caricato
-                      },
-                    },
-                  ],
-                },
-                {
-                  type: "body",
-                  parameters: [
-                    {
-                      type: "text",
-                      text: title, // Titolo del messaggio
-                    },
-                    {
-                      type: "text",
-                      text: name, // Nome del cliente
-                    },
-                    {
-                      type: "text",
-                      text: description, // Descrizione del messaggio
-                    },
-                  ],
-                },
-              ],
+              name: "hello_world",
               language: {
                 code: "en",
               },
