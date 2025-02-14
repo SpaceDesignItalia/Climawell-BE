@@ -105,10 +105,40 @@ class Messages {
             to: "39" + phoneNumber, // Prefisso italiano e numero di telefono
             type: "template",
             template: {
-              name: "hello_world",
+              name: "climam",
               language: {
                 code: "en_US",
               },
+              components: [
+                {
+                  type: "header",
+                  parameters: [
+                    {
+                      type: "image",
+                      image: {
+                        id: imageId, // ID immagine già caricato
+                      },
+                    },
+                  ],
+                },
+                {
+                  type: "body",
+                  parameters: [
+                    {
+                      type: "text",
+                      text: title, // Titolo del messaggio
+                    },
+                    {
+                      type: "text",
+                      text: name, // Nome dell'azienda
+                    },
+                    {
+                      type: "text",
+                      text: description, // Descrizione del messaggio
+                    },
+                  ],
+                },
+              ],
             },
           }),
         });
@@ -228,7 +258,7 @@ class Messages {
             template: {
               name: "climam",
               language: {
-                code: "en",
+                code: "en_US",
               },
               components: [
                 {
@@ -357,82 +387,6 @@ class Messages {
     }
   }
 
-  static async sendPrivatePremiumBatchMessages(
-    contacts,
-    title,
-    description,
-    imageId
-  ) {
-    for (const contact of contacts) {
-      const name = contact.CustomerFullName;
-      const phoneNumber = contact.CustomerPhone;
-      if (!phoneNumber) {
-        continue;
-      }
-
-      try {
-        const response = await axios({
-          url: "https://graph.facebook.com/v21.0/544175122111846/messages",
-          method: "post",
-          headers: {
-            Authorization: `Bearer ${process.env.WHATSAPP_TOKEN}`,
-            "Content-Type": "application/json",
-          },
-          data: JSON.stringify({
-            messaging_product: "whatsapp",
-            to: "39" + phoneNumber, // Prefisso italiano e numero di telefono
-            type: "template",
-            template: {
-              name: "climam",
-              language: {
-                code: "en",
-              },
-              components: [
-                {
-                  type: "header",
-                  parameters: [
-                    {
-                      type: "image",
-                      image: {
-                        id: imageId, // ID immagine già caricato
-                      },
-                    },
-                  ],
-                },
-                {
-                  type: "body",
-                  parameters: [
-                    {
-                      type: "text",
-                      text: title, // Titolo del messaggio
-                    },
-                    {
-                      type: "text",
-                      text: name, // Nome del cliente
-                    },
-                    {
-                      type: "text",
-                      text: description, // Descrizione del messaggio
-                    },
-                  ],
-                },
-              ],
-            },
-          }),
-        });
-
-        console.log(
-          `Messaggio inviato a ${name} (${phoneNumber}):`,
-          response.data
-        );
-      } catch (error) {
-        console.error(
-          `Errore nell'invio del messaggio a ${name} (${phoneNumber}):`,
-          error.response?.data || error.message
-        );
-      }
-    }
-  }
   static async sendPrivatePremiumMessage(
     title,
     description,
@@ -540,7 +494,7 @@ class Messages {
             template: {
               name: "climam",
               language: {
-                code: "en",
+                code: "en_US",
               },
               components: [
                 {
@@ -696,7 +650,7 @@ class Messages {
             template: {
               name: "climam",
               language: {
-                code: "en",
+                code: "en_US",
               },
               components: [
                 {
