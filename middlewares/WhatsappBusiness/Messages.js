@@ -132,7 +132,7 @@ class Messages {
                 },
               ],
               language: {
-                code: "it",
+                code: "en",
               },
             },
           }),
@@ -253,7 +253,7 @@ class Messages {
             template: {
               name: "climam",
               language: {
-                code: "it",
+                code: "en",
               },
               components: [
                 {
@@ -410,7 +410,7 @@ class Messages {
             template: {
               name: "climam",
               language: {
-                code: "it",
+                code: "en",
               },
               components: [
                 {
@@ -565,7 +565,7 @@ class Messages {
             template: {
               name: "climam",
               language: {
-                code: "it",
+                code: "en",
               },
               components: [
                 {
@@ -721,7 +721,7 @@ class Messages {
             template: {
               name: "climam",
               language: {
-                code: "it",
+                code: "en",
               },
               components: [
                 {
