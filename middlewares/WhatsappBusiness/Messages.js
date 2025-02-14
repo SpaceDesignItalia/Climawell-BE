@@ -481,7 +481,7 @@ class Messages {
             to: "39" + phoneNumber, // Prefisso italiano e numero di telefono
             type: "template",
             template: {
-              name: "climawellmarketingtemplate",
+              name: "climatest2",
               language: {
                 code: "en_US",
               },
