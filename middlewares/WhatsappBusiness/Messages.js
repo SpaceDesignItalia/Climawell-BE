@@ -71,12 +71,13 @@ class Messages {
    * Invio effettivo (batch) dei messaggi privati (non premium) con immagine e testo.
    */
   static async sendBatchPrivateMessages(contacts, title, description, imageId) {
+    // Convertiamo la description (eventuale HTML) nel formato WhatsApp
+    const safeDescription = convertHtmlToWhatsApp(description);
+
     for (const contact of contacts) {
       const name = contact.CustomerFullName;
       const phoneNumber = contact.CustomerPhone;
-      if (!phoneNumber) {
-        continue;
-      }
+      if (!phoneNumber) continue;
 
       try {
         const response = await axios({
@@ -93,14 +94,12 @@ class Messages {
             image: {
               id: imageId,
               caption: 
-`${title}
-Ciao ${name},
-${description}
+`*${title}*
+Ciao *${name}*.
+${safeDescription}
 
-Se non desideri ricevere più comunicazioni di marketing,
-scrivi a: marketing@climawell.net
-
-Climawell S.R.L.`
+_Se non desideri ricevere piu comunicazioni di marketing scrivi alla ~mail~:_
+*marketing@climawell.net*`
             },
           }),
         });
@@ -121,40 +120,27 @@ Climawell S.R.L.`
   static async sendCompanyMessage(title, description, imagePath, cap, Agente, db) {
     console.log("Inizio l'invio dei messaggi alle aziende.");
 
-    // Carica l'immagine e ottieni l'ID
     const imageId = await uploadImage(imagePath);
-
-    // Ottieni tutti i contatti aziendali dal database
     const contacts = await ContactModel.GetCompaniesByCapAndAgente(cap, Agente, db);
 
     if (contacts.length > 250) {
       console.log("I contatti sono più di 250. Gestione a batch attivata.");
-
-      // Imposta BlockWhatsappCampaign a true
       await db.query(
         `UPDATE public."Utils" SET value = true WHERE name = 'blockWhatsappCampaign'`
       );
-
       const batchSize = 250;
       let batchNumber = 0;
-
       while (batchNumber * batchSize < contacts.length) {
         const start = batchNumber * batchSize;
         const end = start + batchSize;
         const currentBatch = contacts.slice(start, end);
-
         console.log(
           `Invio batch ${batchNumber + 1}. Contatti da ${start + 1} a ${
             end > contacts.length ? contacts.length : end
           }.`
         );
-
-        // Invia messaggi per il batch corrente
         await this.sendCompanyBatchMessages(currentBatch, title, description, imageId);
-
         batchNumber++;
-
-        // Se ci sono altri batch, aspetta 26 ore
         if (batchNumber * batchSize < contacts.length) {
           console.log("Aspetto 26 ore prima del prossimo batch.");
           await new Promise((resolve) =>
@@ -162,15 +148,11 @@ Climawell S.R.L.`
           );
         }
       }
-
-      // Reimposta BlockWhatsappCampaign a false
       await db.query(
         `UPDATE public."Utils" SET value = false WHERE name = 'blockWhatsappCampaign'`
       );
-
       console.log("Tutti i messaggi sono stati inviati.");
     } else {
-      // Se i contatti sono meno di 250, invia tutto direttamente
       await this.sendCompanyBatchMessages(contacts, title, description, imageId);
       console.log("Tutti i messaggi sono stati inviati.");
     }
@@ -180,12 +162,12 @@ Climawell S.R.L.`
    * Invio effettivo (batch) dei messaggi alle aziende (non premium) con immagine e testo.
    */
   static async sendCompanyBatchMessages(contacts, title, description, imageId) {
+    const safeDescription = convertHtmlToWhatsApp(description);
+
     for (const contact of contacts) {
       const name = contact.CompanyName;
       const phoneNumber = contact.CompanyPhone;
-      if (!phoneNumber) {
-        continue;
-      }
+      if (!phoneNumber) continue;
 
       try {
         const response = await axios({
@@ -202,14 +184,12 @@ Climawell S.R.L.`
             image: {
               id: imageId,
               caption:
-`${title}
-Ciao ${name},
-${description}
+`*${title}*
+Ciao *${name}*.
+${safeDescription}
 
-Se non desideri ricevere più comunicazioni di marketing,
-scrivi a: marketing@climawell.net
-
-Climawell S.R.L.`
+_Se non desideri ricevere piu comunicazioni di marketing scrivi alla ~mail~:_
+*marketing@climawell.net*`
             },
           }),
         });
@@ -230,45 +210,27 @@ Climawell S.R.L.`
   static async sendPrivatePremiumMessage(title, description, imagePath, cap, Agente, db) {
     console.log("Inizio l'invio dei messaggi privati premium.");
 
-    // Carica l'immagine e ottieni l'ID
     const imageId = await uploadImage(imagePath);
-
-    // Ottieni tutti i contatti privati premium dal database
     const contacts = await ContactModel.GetPrivatesPremiumByCapAndAgente(cap, Agente, db);
 
     if (contacts.length > 250) {
       console.log("I contatti sono più di 250. Gestione a batch attivata.");
-
-      // Imposta BlockWhatsappCampaign a true
       await db.query(
         `UPDATE public."Utils" SET value = true WHERE name = 'blockWhatsappCampaign'`
       );
-
       const batchSize = 250;
       let batchNumber = 0;
-
       while (batchNumber * batchSize < contacts.length) {
         const start = batchNumber * batchSize;
         const end = start + batchSize;
         const currentBatch = contacts.slice(start, end);
-
         console.log(
           `Invio batch ${batchNumber + 1}. Contatti da ${start + 1} a ${
             end > contacts.length ? contacts.length : end
           }.`
         );
-
-        // Invia messaggi per il batch corrente
-        await this.sendPrivatePremiumBatchMessages(
-          currentBatch,
-          title,
-          description,
-          imageId
-        );
-
+        await this.sendPrivatePremiumBatchMessages(currentBatch, title, description, imageId);
         batchNumber++;
-
-        // Se ci sono altri batch, aspetta 26 ore
         if (batchNumber * batchSize < contacts.length) {
           console.log("Aspetto 26 ore prima del prossimo batch.");
           await new Promise((resolve) =>
@@ -276,21 +238,12 @@ Climawell S.R.L.`
           );
         }
       }
-
-      // Reimposta BlockWhatsappCampaign a false
       await db.query(
         `UPDATE public."Utils" SET value = false WHERE name = 'blockWhatsappCampaign'`
       );
-
       console.log("Tutti i messaggi sono stati inviati.");
     } else {
-      // Se i contatti sono meno di 250, invia tutto direttamente
-      await this.sendPrivatePremiumBatchMessages(
-        contacts,
-        title,
-        description,
-        imageId
-      );
+      await this.sendPrivatePremiumBatchMessages(contacts, title, description, imageId);
       console.log("Tutti i messaggi sono stati inviati.");
     }
   }
@@ -299,12 +252,12 @@ Climawell S.R.L.`
    * Invio effettivo (batch) dei messaggi privati premium con immagine e testo.
    */
   static async sendPrivatePremiumBatchMessages(contacts, title, description, imageId) {
+    const safeDescription = convertHtmlToWhatsApp(description);
+
     for (const contact of contacts) {
       const name = contact.CustomerFullName;
       const phoneNumber = contact.CustomerPhone;
-      if (!phoneNumber) {
-        continue;
-      }
+      if (!phoneNumber) continue;
 
       try {
         const response = await axios({
@@ -321,14 +274,12 @@ Climawell S.R.L.`
             image: {
               id: imageId,
               caption:
-`${title}
-Ciao ${name},
-${description}
+`*${title}*
+Ciao *${name}*.
+${safeDescription}
 
-Se non desideri ricevere più comunicazioni di marketing,
-scrivi a: marketing@climawell.net
-
-Climawell S.R.L.`
+_Se non desideri ricevere piu comunicazioni di marketing scrivi alla ~mail~:_
+*marketing@climawell.net*`
             },
           }),
         });
@@ -349,45 +300,27 @@ Climawell S.R.L.`
   static async sendCompanyPremiumMessage(title, description, imagePath, cap, Agente, db) {
     console.log("Inizio l'invio dei messaggi premium alle aziende.");
 
-    // Carica l'immagine e ottieni l'ID
     const imageId = await uploadImage(imagePath);
-
-    // Ottieni tutti i contatti aziendali premium dal database
     const contacts = await ContactModel.GetCompaniesPremiumByCapAndAgente(cap, Agente, db);
 
     if (contacts.length > 250) {
       console.log("I contatti sono più di 250. Gestione a batch attivata.");
-
-      // Imposta BlockWhatsappCampaign a true
       await db.query(
         `UPDATE public."Utils" SET value = true WHERE name = 'blockWhatsappCampaign'`
       );
-
       const batchSize = 250;
       let batchNumber = 0;
-
       while (batchNumber * batchSize < contacts.length) {
         const start = batchNumber * batchSize;
         const end = start + batchSize;
         const currentBatch = contacts.slice(start, end);
-
         console.log(
           `Invio batch ${batchNumber + 1}. Contatti da ${start + 1} a ${
             end > contacts.length ? contacts.length : end
           }.`
         );
-
-        // Invia messaggi per il batch corrente
-        await this.sendCompanyPremiumBatchMessages(
-          currentBatch,
-          title,
-          description,
-          imageId
-        );
-
+        await this.sendCompanyPremiumBatchMessages(currentBatch, title, description, imageId);
         batchNumber++;
-
-        // Se ci sono altri batch, aspetta 26 ore
         if (batchNumber * batchSize < contacts.length) {
           console.log("Aspetto 26 ore prima del prossimo batch.");
           await new Promise((resolve) =>
@@ -395,21 +328,12 @@ Climawell S.R.L.`
           );
         }
       }
-
-      // Reimposta BlockWhatsappCampaign a false
       await db.query(
         `UPDATE public."Utils" SET value = false WHERE name = 'blockWhatsappCampaign'`
       );
-
       console.log("Tutti i messaggi sono stati inviati.");
     } else {
-      // Se i contatti sono meno di 250, invia tutto direttamente
-      await this.sendCompanyPremiumBatchMessages(
-        contacts,
-        title,
-        description,
-        imageId
-      );
+      await this.sendCompanyPremiumBatchMessages(contacts, title, description, imageId);
       console.log("Tutti i messaggi sono stati inviati.");
     }
   }
@@ -418,12 +342,12 @@ Climawell S.R.L.`
    * Invio effettivo (batch) dei messaggi premium alle aziende con immagine e testo.
    */
   static async sendCompanyPremiumBatchMessages(contacts, title, description, imageId) {
+    const safeDescription = convertHtmlToWhatsApp(description);
+
     for (const contact of contacts) {
       const name = contact.CompanyName;
       const phoneNumber = contact.CompanyPhone;
-      if (!phoneNumber) {
-        continue;
-      }
+      if (!phoneNumber) continue;
 
       try {
         const response = await axios({
@@ -440,14 +364,12 @@ Climawell S.R.L.`
             image: {
               id: imageId,
               caption:
-`${title}
-Ciao ${name},
-${description}
+`*${title}*
+Ciao *${name}*.
+${safeDescription}
 
-Se non desideri ricevere più comunicazioni di marketing,
-scrivi a: marketing@climawell.net
-
-Climawell S.R.L.`
+_Se non desideri ricevere piu comunicazioni di marketing scrivi alla ~mail~:_
+*marketing@climawell.net*`
             },
           }),
         });
@@ -468,7 +390,6 @@ Climawell S.R.L.`
   static async sendPremiumMessage(title, description, imagePath, cap, Agente, db) {
     console.log("Inizio l'invio di tutti i messaggi premium (privati e aziende).");
 
-    // Invia in parallelo
     await Promise.all([
       this.sendPrivatePremiumMessage(title, description, imagePath, cap, Agente, db),
       this.sendCompanyPremiumMessage(title, description, imagePath, cap, Agente, db),
@@ -479,7 +400,7 @@ Climawell S.R.L.`
 }
 
 /**
- * Funzione di supporto per caricare l'immagine su WhatsApp e ottenere l'ID da usare nei messaggi.
+ * Funzione di supporto per caricare l'immagine su WhatsApp e ottenere l'ID.
  */
 async function uploadImage(imagePath) {
   const data = new FormData();
@@ -499,11 +420,35 @@ async function uploadImage(imagePath) {
     });
 
     console.log("Image uploaded successfully:", response.data);
-    return response.data.id; // `id` è l'ID da usare come reference all'immagine
+    return response.data.id;
   } catch (error) {
     console.error("Error uploading image:", error.response?.data || error.message);
     throw error;
   }
+}
+
+/**
+ * Converte una stringa HTML in formattazione WhatsApp (Markdown-like):
+ * - <strong> o <b> -> *testo*
+ * - <em> o <i> -> _testo_
+ * - <del> o <strike> -> ~testo~
+ * - <p> e <br> -> newline
+ * Rimuove anche eventuali altri tag HTML.
+ */
+function convertHtmlToWhatsApp(html) {
+  if (!html) return "";
+  return html
+    .replace(/<strong>(.*?)<\/strong>/gi, '*$1*')
+    .replace(/<b>(.*?)<\/b>/gi, '*$1*')
+    .replace(/<em>(.*?)<\/em>/gi, '_$1_')
+    .replace(/<i>(.*?)<\/i>/gi, '_$1_')
+    .replace(/<del>(.*?)<\/del>/gi, '~$1~')
+    .replace(/<strike>(.*?)<\/strike>/gi, '~$1~')
+    .replace(/<p>/gi, '\n')
+    .replace(/<\/p>/gi, '\n')
+    .replace(/<br\s*\/?>/gi, '\n')
+    .replace(/<[^>]+>/g, '')
+    .trim();
 }
 
 module.exports = Messages;
