@@ -87,19 +87,11 @@ class Messages {
             to: "39" + phoneNumber, // Prefisso italiano e numero di telefono
             type: "template",
             template: {
-              name: "climawellm",
+              name: "climatest2",
+              language: {
+                code: "en_US",
+              },
               components: [
-                {
-                  type: "header",
-                  parameters: [
-                    {
-                      type: "image",
-                      image: {
-                        id: imageId, // ID immagine già caricato
-                      },
-                    },
-                  ],
-                },
                 {
                   type: "body",
                   parameters: [
@@ -109,7 +101,7 @@ class Messages {
                     },
                     {
                       type: "text",
-                      text: name, // Nome del cliente
+                      text: name, // Nome dell'azienda
                     },
                     {
                       type: "text",
@@ -118,9 +110,6 @@ class Messages {
                   ],
                 },
               ],
-              language: {
-                code: "it",
-              },
             },
           }),
         });
