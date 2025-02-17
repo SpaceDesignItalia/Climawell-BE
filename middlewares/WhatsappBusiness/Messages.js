@@ -102,7 +102,7 @@ class Messages {
           },
           data: JSON.stringify({
             messaging_product: "whatsapp",
-            to: "39" + phoneNumber, // Prefisso italiano e numero di telefono
+            to: "+39" + phoneNumber, // Prefisso italiano e numero di telefono
             type: "template",
             template: {
               name: "climawellmarketingtemplate",
@@ -242,7 +242,7 @@ class Messages {
           },
           data: JSON.stringify({
             messaging_product: "whatsapp",
-            to: "39" + phoneNumber, // Prefisso italiano e numero di telefono
+            to: "+39" + phoneNumber, // Prefisso italiano e numero di telefono
             type: "template",
             template: {
               name: "climawellmarketingtemplate",
@@ -478,7 +478,7 @@ class Messages {
           },
           data: JSON.stringify({
             messaging_product: "whatsapp",
-            to: "39" + phoneNumber, // Prefisso italiano e numero di telefono
+            to: "+39" + phoneNumber, // Prefisso italiano e numero di telefono
             type: "template",
             template: {
               name: "climawellmarketingtemplate",
@@ -634,7 +634,7 @@ class Messages {
           },
           data: JSON.stringify({
             messaging_product: "whatsapp",
-            to: "39" + phoneNumber, // Prefisso italiano e numero di telefono
+            to: "+39" + phoneNumber, // Prefisso italiano e numero di telefono
             type: "template",
             template: {
               name: "climawellmarketingtemplate",
