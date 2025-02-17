@@ -67,6 +67,9 @@ class EmailService {
       const imageId = `image-${Date.now()}`;
 
       const sendEmail = async (contact) => {
+        if (!contact.CustomerEmail) {
+          return;
+        }
         try {
           const name = contact.CustomerFullName?.split(" ")[0] || "";
           const email = contact.CustomerEmail;
@@ -176,6 +179,9 @@ class EmailService {
       const imageId = `image-${Date.now()}`;
 
       const sendEmail = async (company) => {
+        if (!company.CompanyEmail) {
+          return;
+        }
         try {
           const name = company.CompanyName || "";
           const email = company.CompanyEmail;
@@ -287,6 +293,9 @@ class EmailService {
       const imageId = `image-${Date.now()}`;
 
       const sendEmail = async (contact) => {
+        if (!contact.CustomerEmail) {
+          return;
+        }
         try {
           const name = contact.CustomerFullName?.split(" ")[0] || "";
           const email = contact.CustomerEmail;
@@ -396,6 +405,9 @@ class EmailService {
       const imageId = `image-${Date.now()}`;
 
       const sendEmail = async (company) => {
+        if (!company.CompanyEmail) {
+          return;
+        }
         try {
           const name = company.CompanyName || "";
           const email = company.CompanyEmail;

@@ -447,7 +447,8 @@ class ContactModel {
         query = `SELECT "CustomerId", CONCAT("CustomerName", ' ', "CustomerSurname") AS "CustomerFullName", 
                         "CustomerEmail", "CustomerPhone", "PolicyAccepted", "Agente", "Cap" 
                  FROM public."Customer"
-                 WHERE "Cap" IN (${capValues}) OR "generalCap" IN (${capValues})
+                 INNER JOIN public."Cap" ON "Customer"."Cap" = "Cap"."cap"
+                 WHERE ("Cap" IN (${capValues}) OR "generalCap" IN (${capValues}))
                  AND "Agente" IN (${agenteValues})
                  AND "IsPremium" = true
                  ORDER BY "CustomerId" ASC`;
@@ -463,7 +464,8 @@ class ContactModel {
         query = `SELECT "CustomerId", CONCAT("CustomerName", ' ', "CustomerSurname") AS "CustomerFullName", 
                         "CustomerEmail", "CustomerPhone", "PolicyAccepted", "Agente", "Cap" 
                  FROM public."Customer"
-                 WHERE "Cap" IN (${capValues}) OR "generalCap" IN (${capValues})
+                 INNER JOIN public."Cap" ON "Customer"."Cap" = "Cap"."cap"
+                 WHERE ("Cap" IN (${capValues}) OR "generalCap" IN (${capValues}))
                  AND "IsPremium" = true
                  ORDER BY "CustomerId" ASC`;
 
@@ -540,7 +542,9 @@ class ContactModel {
       // Se entrambi capList e agenteList sono forniti
       if (capValues.length > 0 && agenteValues.length > 0) {
         query = `SELECT * FROM public."Company" 
-                 WHERE "Cap" IN (${capValues}) AND "Agente" IN (${agenteValues})
+                 INNER JOIN public."Cap" ON "Company"."Cap" = "Cap"."cap"
+                 WHERE ("Cap" IN (${capValues}) OR "generalCap" IN (${capValues}))
+                 AND "Agente" IN (${agenteValues})
                  ORDER BY "CompanyId" ASC`;
 
         db.query(query, (error, result) => {
@@ -552,7 +556,8 @@ class ContactModel {
       } else if (capValues.length > 0) {
         // Se solo capList è fornita
         query = `SELECT * FROM public."Company" 
-                 WHERE "Cap" IN (${capValues})
+                 INNER JOIN public."Cap" ON "Company"."Cap" = "Cap"."cap"
+                 WHERE ("Cap" IN (${capValues}) OR "generalCap" IN (${capValues}))
                  ORDER BY "CompanyId" ASC`;
 
         db.query(query, (error, result) => {
@@ -622,7 +627,9 @@ class ContactModel {
       // Se entrambi capList e agenteList sono forniti
       if (capValues.length > 0 && agenteValues.length > 0) {
         query = `SELECT * FROM public."Company" 
-                 WHERE "Cap" IN (${capValues}) AND "Agente" IN (${agenteValues}) 
+                 INNER JOIN public."Cap" ON "Company"."Cap" = "Cap"."cap"
+                 WHERE ("Cap" IN (${capValues}) OR "generalCap" IN (${capValues}))
+                 AND "Agente" IN (${agenteValues})
                  AND "IsPremium" = true
                  ORDER BY "CompanyId" ASC`;
 
@@ -635,7 +642,8 @@ class ContactModel {
       } else if (capValues.length > 0) {
         // Se solo capList è fornita
         query = `SELECT * FROM public."Company" 
-                 WHERE "Cap" IN (${capValues}) 
+                 INNER JOIN public."Cap" ON "Company"."Cap" = "Cap"."cap"
+                 WHERE ("Cap" IN (${capValues}) OR "generalCap" IN (${capValues}))
                  AND "IsPremium" = true
                  ORDER BY "CompanyId" ASC`;
 
