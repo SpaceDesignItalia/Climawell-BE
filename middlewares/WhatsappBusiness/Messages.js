@@ -98,7 +98,7 @@ class Messages {
 Ciao *${name}*.
 ${safeDescription}
 
-_Se non desideri ricevere piu comunicazioni di marketing scrivi alla ~mail~:_
+_Se non desideri ricevere piu comunicazioni di marketing scrivi alla mail:_
 *marketing@climawell.net*`
             },
           }),
@@ -188,7 +188,7 @@ _Se non desideri ricevere piu comunicazioni di marketing scrivi alla ~mail~:_
 Ciao *${name}*.
 ${safeDescription}
 
-_Se non desideri ricevere piu comunicazioni di marketing scrivi alla ~mail~:_
+_Se non desideri ricevere piu comunicazioni di marketing scrivi alla mail:_
 *marketing@climawell.net*`
             },
           }),
@@ -278,7 +278,7 @@ _Se non desideri ricevere piu comunicazioni di marketing scrivi alla ~mail~:_
 Ciao *${name}*.
 ${safeDescription}
 
-_Se non desideri ricevere piu comunicazioni di marketing scrivi alla ~mail~:_
+_Se non desideri ricevere piu comunicazioni di marketing scrivi alla mail:_
 *marketing@climawell.net*`
             },
           }),
@@ -368,7 +368,7 @@ _Se non desideri ricevere piu comunicazioni di marketing scrivi alla ~mail~:_
 Ciao *${name}*.
 ${safeDescription}
 
-_Se non desideri ricevere piu comunicazioni di marketing scrivi alla ~mail~:_
+_Se non desideri ricevere piu comunicazioni di marketing scrivi alla mail:_
 *marketing@climawell.net*`
             },
           }),
