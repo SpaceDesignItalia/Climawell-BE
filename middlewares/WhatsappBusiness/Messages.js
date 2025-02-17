@@ -6,10 +6,10 @@ const FormData = require("form-data");
 
 class Messages {
   /**
-   * Invio messaggi privati (non premium) interattivi.
+   * Invio messaggi privati (non premium) con immagine e testo.
    */
   static async sendPrivateMessage(title, description, imagePath, cap, Agente, db) {
-    console.log("Inizio l'invio dei messaggi privati interattivi.");
+    console.log("Inizio l'invio dei messaggi privati.");
 
     // Carica l'immagine e ottieni l'ID
     const imageId = await uploadImage(imagePath);
@@ -19,51 +19,106 @@ class Messages {
 
     if (contacts.length > 250) {
       console.log("I contatti sono più di 250. Gestione a batch attivata.");
+
+      // Imposta BlockWhatsappCampaign a true
       await db.query(
         `UPDATE public."Utils" SET value = true WHERE name = 'blockWhatsappCampaign'`
       );
+
       const batchSize = 250;
       let batchNumber = 0;
+
+      // Dividi i contatti in batch
       while (batchNumber * batchSize < contacts.length) {
         const start = batchNumber * batchSize;
         const end = start + batchSize;
         const currentBatch = contacts.slice(start, end);
+
         console.log(
-          `Invio batch ${batchNumber + 1}. Contatti da ${start + 1} a ${end > contacts.length ? contacts.length : end}.`
+          `Invio batch ${batchNumber + 1}. Contatti da ${start + 1} a ${
+            end > contacts.length ? contacts.length : end
+          }.`
         );
-        await this.sendBatchPrivateInteractiveMessages(currentBatch, title, description, imageId);
+
+        // Invia messaggi per il batch corrente
+        await this.sendBatchPrivateMessages(currentBatch, title, description, imageId);
+
         batchNumber++;
+
+        // Se ci sono altri batch, aspetta 26 ore
         if (batchNumber * batchSize < contacts.length) {
           console.log("Aspetto 26 ore prima del prossimo batch.");
-          await new Promise((resolve) => setTimeout(resolve, 26 * 60 * 60 * 1000));
+          await new Promise((resolve) =>
+            setTimeout(resolve, 26 * 60 * 60 * 1000)
+          );
         }
       }
+
+      // Reimposta BlockWhatsappCampaign a false
       await db.query(
         `UPDATE public."Utils" SET value = false WHERE name = 'blockWhatsappCampaign'`
       );
-      console.log("Tutti i messaggi privati interattivi sono stati inviati.");
-    } else {
-      await this.sendBatchPrivateInteractiveMessages(contacts, title, description, imageId);
-      console.log("Tutti i messaggi privati interattivi sono stati inviati.");
-    }
-  }
 
-  static async sendBatchPrivateInteractiveMessages(contacts, title, description, imageId) {
-    // Converte eventuale HTML in formattazione WhatsApp (Markdown-like)
-    const safeDescription = convertHtmlToWhatsApp(description);
-    for (const contact of contacts) {
-      const name = contact.CustomerFullName;
-      const phoneNumber = contact.CustomerPhone;
-      if (!phoneNumber) continue;
-      await sendInteractiveMessage(phoneNumber, title, safeDescription, name, imageId);
+      console.log("Tutti i messaggi sono stati inviati.");
+    } else {
+      // Se i contatti sono meno di 250, invia tutto direttamente
+      await this.sendBatchPrivateMessages(contacts, title, description, imageId);
+      console.log("Tutti i messaggi sono stati inviati.");
     }
   }
 
   /**
-   * Invio messaggi aziendali (non premium) interattivi.
+   * Invio effettivo (batch) dei messaggi privati (non premium) con immagine e testo.
+   */
+  static async sendBatchPrivateMessages(contacts, title, description, imageId) {
+    // Convertiamo la description (eventuale HTML) nel formato WhatsApp
+    const safeDescription = convertHtmlToWhatsApp(description);
+
+    for (const contact of contacts) {
+      const name = contact.CustomerFullName;
+      const phoneNumber = contact.CustomerPhone;
+      if (!phoneNumber) continue;
+
+      try {
+        const response = await axios({
+          url: "https://graph.facebook.com/v21.0/544175122111846/messages",
+          method: "post",
+          headers: {
+            Authorization: `Bearer ${process.env.WHATSAPP_TOKEN}`,
+            "Content-Type": "application/json",
+          },
+          data: JSON.stringify({
+            messaging_product: "whatsapp",
+            to: "+39" + phoneNumber,
+            type: "image",
+            image: {
+              id: imageId,
+              caption: 
+`*${title}*
+Ciao *${name}*.
+${safeDescription}
+
+_Se non desideri ricevere piu comunicazioni di marketing scrivi alla ~mail~:_
+*marketing@climawell.net*`
+            },
+          }),
+        });
+
+        console.log(`Messaggio inviato a ${name} (${phoneNumber}):`, response.data);
+      } catch (error) {
+        console.error(
+          `Errore nell'invio del messaggio a ${name} (${phoneNumber}):`,
+          error.response?.data || error.message
+        );
+      }
+    }
+  }
+
+  /**
+   * Invio messaggi alle aziende (non premium) con immagine e testo.
    */
   static async sendCompanyMessage(title, description, imagePath, cap, Agente, db) {
-    console.log("Inizio l'invio dei messaggi aziendali interattivi.");
+    console.log("Inizio l'invio dei messaggi alle aziende.");
 
     const imageId = await uploadImage(imagePath);
     const contacts = await ContactModel.GetCompaniesByCapAndAgente(cap, Agente, db);
@@ -80,40 +135,80 @@ class Messages {
         const end = start + batchSize;
         const currentBatch = contacts.slice(start, end);
         console.log(
-          `Invio batch ${batchNumber + 1}. Contatti da ${start + 1} a ${end > contacts.length ? contacts.length : end}.`
+          `Invio batch ${batchNumber + 1}. Contatti da ${start + 1} a ${
+            end > contacts.length ? contacts.length : end
+          }.`
         );
-        await this.sendBatchCompanyInteractiveMessages(currentBatch, title, description, imageId);
+        await this.sendCompanyBatchMessages(currentBatch, title, description, imageId);
         batchNumber++;
         if (batchNumber * batchSize < contacts.length) {
           console.log("Aspetto 26 ore prima del prossimo batch.");
-          await new Promise((resolve) => setTimeout(resolve, 26 * 60 * 60 * 1000));
+          await new Promise((resolve) =>
+            setTimeout(resolve, 26 * 60 * 60 * 1000)
+          );
         }
       }
       await db.query(
         `UPDATE public."Utils" SET value = false WHERE name = 'blockWhatsappCampaign'`
       );
-      console.log("Tutti i messaggi aziendali interattivi sono stati inviati.");
+      console.log("Tutti i messaggi sono stati inviati.");
     } else {
-      await this.sendBatchCompanyInteractiveMessages(contacts, title, description, imageId);
-      console.log("Tutti i messaggi aziendali interattivi sono stati inviati.");
-    }
-  }
-
-  static async sendBatchCompanyInteractiveMessages(contacts, title, description, imageId) {
-    const safeDescription = convertHtmlToWhatsApp(description);
-    for (const contact of contacts) {
-      const name = contact.CompanyName;
-      const phoneNumber = contact.CompanyPhone;
-      if (!phoneNumber) continue;
-      await sendInteractiveMessage(phoneNumber, title, safeDescription, name, imageId);
+      await this.sendCompanyBatchMessages(contacts, title, description, imageId);
+      console.log("Tutti i messaggi sono stati inviati.");
     }
   }
 
   /**
-   * Invio messaggi privati premium interattivi.
+   * Invio effettivo (batch) dei messaggi alle aziende (non premium) con immagine e testo.
+   */
+  static async sendCompanyBatchMessages(contacts, title, description, imageId) {
+    const safeDescription = convertHtmlToWhatsApp(description);
+
+    for (const contact of contacts) {
+      const name = contact.CompanyName;
+      const phoneNumber = contact.CompanyPhone;
+      if (!phoneNumber) continue;
+
+      try {
+        const response = await axios({
+          url: "https://graph.facebook.com/v21.0/544175122111846/messages",
+          method: "post",
+          headers: {
+            Authorization: `Bearer ${process.env.WHATSAPP_TOKEN}`,
+            "Content-Type": "application/json",
+          },
+          data: JSON.stringify({
+            messaging_product: "whatsapp",
+            to: "+39" + phoneNumber,
+            type: "image",
+            image: {
+              id: imageId,
+              caption:
+`*${title}*
+Ciao *${name}*.
+${safeDescription}
+
+_Se non desideri ricevere piu comunicazioni di marketing scrivi alla ~mail~:_
+*marketing@climawell.net*`
+            },
+          }),
+        });
+
+        console.log(`Messaggio inviato a ${name} (${phoneNumber}):`, response.data);
+      } catch (error) {
+        console.error(
+          `Errore nell'invio del messaggio a ${name} (${phoneNumber}):`,
+          error.response?.data || error.message
+        );
+      }
+    }
+  }
+
+  /**
+   * Invio messaggi privati premium con immagine e testo.
    */
   static async sendPrivatePremiumMessage(title, description, imagePath, cap, Agente, db) {
-    console.log("Inizio l'invio dei messaggi privati premium interattivi.");
+    console.log("Inizio l'invio dei messaggi privati premium.");
 
     const imageId = await uploadImage(imagePath);
     const contacts = await ContactModel.GetPrivatesPremiumByCapAndAgente(cap, Agente, db);
@@ -130,40 +225,80 @@ class Messages {
         const end = start + batchSize;
         const currentBatch = contacts.slice(start, end);
         console.log(
-          `Invio batch ${batchNumber + 1}. Contatti da ${start + 1} a ${end > contacts.length ? contacts.length : end}.`
+          `Invio batch ${batchNumber + 1}. Contatti da ${start + 1} a ${
+            end > contacts.length ? contacts.length : end
+          }.`
         );
-        await this.sendBatchPrivatePremiumInteractiveMessages(currentBatch, title, description, imageId);
+        await this.sendPrivatePremiumBatchMessages(currentBatch, title, description, imageId);
         batchNumber++;
         if (batchNumber * batchSize < contacts.length) {
           console.log("Aspetto 26 ore prima del prossimo batch.");
-          await new Promise((resolve) => setTimeout(resolve, 26 * 60 * 60 * 1000));
+          await new Promise((resolve) =>
+            setTimeout(resolve, 26 * 60 * 60 * 1000)
+          );
         }
       }
       await db.query(
         `UPDATE public."Utils" SET value = false WHERE name = 'blockWhatsappCampaign'`
       );
-      console.log("Tutti i messaggi privati premium interattivi sono stati inviati.");
+      console.log("Tutti i messaggi sono stati inviati.");
     } else {
-      await this.sendBatchPrivatePremiumInteractiveMessages(contacts, title, description, imageId);
-      console.log("Tutti i messaggi privati premium interattivi sono stati inviati.");
-    }
-  }
-
-  static async sendBatchPrivatePremiumInteractiveMessages(contacts, title, description, imageId) {
-    const safeDescription = convertHtmlToWhatsApp(description);
-    for (const contact of contacts) {
-      const name = contact.CustomerFullName;
-      const phoneNumber = contact.CustomerPhone;
-      if (!phoneNumber) continue;
-      await sendInteractiveMessage(phoneNumber, title, safeDescription, name, imageId);
+      await this.sendPrivatePremiumBatchMessages(contacts, title, description, imageId);
+      console.log("Tutti i messaggi sono stati inviati.");
     }
   }
 
   /**
-   * Invio messaggi aziendali premium interattivi.
+   * Invio effettivo (batch) dei messaggi privati premium con immagine e testo.
+   */
+  static async sendPrivatePremiumBatchMessages(contacts, title, description, imageId) {
+    const safeDescription = convertHtmlToWhatsApp(description);
+
+    for (const contact of contacts) {
+      const name = contact.CustomerFullName;
+      const phoneNumber = contact.CustomerPhone;
+      if (!phoneNumber) continue;
+
+      try {
+        const response = await axios({
+          url: "https://graph.facebook.com/v21.0/544175122111846/messages",
+          method: "post",
+          headers: {
+            Authorization: `Bearer ${process.env.WHATSAPP_TOKEN}`,
+            "Content-Type": "application/json",
+          },
+          data: JSON.stringify({
+            messaging_product: "whatsapp",
+            to: "+39" + phoneNumber,
+            type: "image",
+            image: {
+              id: imageId,
+              caption:
+`*${title}*
+Ciao *${name}*.
+${safeDescription}
+
+_Se non desideri ricevere piu comunicazioni di marketing scrivi alla ~mail~:_
+*marketing@climawell.net*`
+            },
+          }),
+        });
+
+        console.log(`Messaggio inviato a ${name} (${phoneNumber}):`, response.data);
+      } catch (error) {
+        console.error(
+          `Errore nell'invio del messaggio a ${name} (${phoneNumber}):`,
+          error.response?.data || error.message
+        );
+      }
+    }
+  }
+
+  /**
+   * Invio messaggi premium alle aziende con immagine e testo.
    */
   static async sendCompanyPremiumMessage(title, description, imagePath, cap, Agente, db) {
-    console.log("Inizio l'invio dei messaggi aziendali premium interattivi.");
+    console.log("Inizio l'invio dei messaggi premium alle aziende.");
 
     const imageId = await uploadImage(imagePath);
     const contacts = await ContactModel.GetCompaniesPremiumByCapAndAgente(cap, Agente, db);
@@ -180,105 +315,87 @@ class Messages {
         const end = start + batchSize;
         const currentBatch = contacts.slice(start, end);
         console.log(
-          `Invio batch ${batchNumber + 1}. Contatti da ${start + 1} a ${end > contacts.length ? contacts.length : end}.`
+          `Invio batch ${batchNumber + 1}. Contatti da ${start + 1} a ${
+            end > contacts.length ? contacts.length : end
+          }.`
         );
-        await this.sendBatchCompanyPremiumInteractiveMessages(currentBatch, title, description, imageId);
+        await this.sendCompanyPremiumBatchMessages(currentBatch, title, description, imageId);
         batchNumber++;
         if (batchNumber * batchSize < contacts.length) {
           console.log("Aspetto 26 ore prima del prossimo batch.");
-          await new Promise((resolve) => setTimeout(resolve, 26 * 60 * 60 * 1000));
+          await new Promise((resolve) =>
+            setTimeout(resolve, 26 * 60 * 60 * 1000)
+          );
         }
       }
       await db.query(
         `UPDATE public."Utils" SET value = false WHERE name = 'blockWhatsappCampaign'`
       );
-      console.log("Tutti i messaggi aziendali premium interattivi sono stati inviati.");
+      console.log("Tutti i messaggi sono stati inviati.");
     } else {
-      await this.sendBatchCompanyPremiumInteractiveMessages(contacts, title, description, imageId);
-      console.log("Tutti i messaggi aziendali premium interattivi sono stati inviati.");
-    }
-  }
-
-  static async sendBatchCompanyPremiumInteractiveMessages(contacts, title, description, imageId) {
-    const safeDescription = convertHtmlToWhatsApp(description);
-    for (const contact of contacts) {
-      const name = contact.CompanyName;
-      const phoneNumber = contact.CompanyPhone;
-      if (!phoneNumber) continue;
-      await sendInteractiveMessage(phoneNumber, title, safeDescription, name, imageId);
+      await this.sendCompanyPremiumBatchMessages(contacts, title, description, imageId);
+      console.log("Tutti i messaggi sono stati inviati.");
     }
   }
 
   /**
-   * Invio in parallelo di tutti i messaggi premium (privati e aziende) interattivi.
+   * Invio effettivo (batch) dei messaggi premium alle aziende con immagine e testo.
+   */
+  static async sendCompanyPremiumBatchMessages(contacts, title, description, imageId) {
+    const safeDescription = convertHtmlToWhatsApp(description);
+
+    for (const contact of contacts) {
+      const name = contact.CompanyName;
+      const phoneNumber = contact.CompanyPhone;
+      if (!phoneNumber) continue;
+
+      try {
+        const response = await axios({
+          url: "https://graph.facebook.com/v21.0/544175122111846/messages",
+          method: "post",
+          headers: {
+            Authorization: `Bearer ${process.env.WHATSAPP_TOKEN}`,
+            "Content-Type": "application/json",
+          },
+          data: JSON.stringify({
+            messaging_product: "whatsapp",
+            to: "+39" + phoneNumber,
+            type: "image",
+            image: {
+              id: imageId,
+              caption:
+`*${title}*
+Ciao *${name}*.
+${safeDescription}
+
+_Se non desideri ricevere piu comunicazioni di marketing scrivi alla ~mail~:_
+*marketing@climawell.net*`
+            },
+          }),
+        });
+
+        console.log(`Messaggio inviato a ${name} (${phoneNumber}):`, response.data);
+      } catch (error) {
+        console.error(
+          `Errore nell'invio del messaggio a ${name} (${phoneNumber}):`,
+          error.response?.data || error.message
+        );
+      }
+    }
+  }
+
+  /**
+   * Invio in parallelo di tutti i messaggi premium (privati e aziende).
    */
   static async sendPremiumMessage(title, description, imagePath, cap, Agente, db) {
-    console.log("Inizio l'invio di tutti i messaggi premium interattivi.");
+    console.log("Inizio l'invio di tutti i messaggi premium (privati e aziende).");
+
     await Promise.all([
       this.sendPrivatePremiumMessage(title, description, imagePath, cap, Agente, db),
       this.sendCompanyPremiumMessage(title, description, imagePath, cap, Agente, db),
     ]);
-    console.log("Tutti i messaggi premium interattivi sono stati inviati.");
-  }
-}
 
-/**
- * Funzione generica per inviare un messaggio interattivo a un singolo numero.
- * Il messaggio include:
- * - Header con immagine (id dell'immagine già caricata)
- * - Body con testo formattato (Markdown-like)
- * - Footer con testo semplice (max 60 caratteri)
- * - Pulsante "Visita sito" che apre https://climawell.net/
- */
-async function sendInteractiveMessage(phoneNumber, title, safeDescription, name, imageId) {
-  // Costruiamo il testo del body usando la formattazione WhatsApp
-  const bodyText = `*${title}*\nCiao *${name}*.\n\n${safeDescription}\n\nSe non desideri ricevere più comunicazioni di marketing, scrivi a marketing@climawell.net`;
-  const footerText = "Climawell S.R.L."; // Massimo 60 caratteri, nessuna formattazione
-
-  try {
-    const response = await axios({
-      url: "https://graph.facebook.com/v16.0/544175122111846/messages",
-      method: "post",
-      headers: {
-        Authorization: `Bearer ${process.env.WHATSAPP_TOKEN}`,
-        "Content-Type": "application/json",
-      },
-      data: JSON.stringify({
-        messaging_product: "whatsapp",
-        to: "+39" + phoneNumber,
-        type: "interactive",
-        interactive: {
-          type: "button",
-          header: {
-            type: "image",
-            image: {
-              id: imageId,
-            },
-          },
-          body: {
-            text: bodyText,
-          },
-          footer: {
-            text: footerText,
-          },
-          actions: {
-            buttons: [
-              {
-                type: "url",
-                url: "https://climawell.net/",
-                title: "Visita sito",
-              },
-            ],
-          },
-        },
-      }),
-    });
-    console.log(`Messaggio interattivo inviato a ${phoneNumber}:`, response.data);
-  } catch (error) {
-    console.error(
-      `Errore nell'invio del messaggio interattivo a ${phoneNumber}:`,
-      error.response?.data || error.message
-    );
+    console.log("Tutti i messaggi premium sono stati inviati.");
   }
 }
 
@@ -301,6 +418,7 @@ async function uploadImage(imagePath) {
       },
       data: data,
     });
+
     console.log("Image uploaded successfully:", response.data);
     return response.data.id;
   } catch (error) {
