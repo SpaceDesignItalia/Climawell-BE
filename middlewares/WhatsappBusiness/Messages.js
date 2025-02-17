@@ -2,27 +2,20 @@ const axios = require("axios");
 const ContactModel = require("../../Models/ContactModel");
 require("dotenv").config();
 const fs = require("fs");
+const FormData = require("form-data");
 
 class Messages {
-  static async sendPrivateMessage(
-    title,
-    description,
-    imagePath,
-    cap,
-    Agente,
-    db
-  ) {
+  /**
+   * Invio messaggi privati (non premium) con immagine e testo.
+   */
+  static async sendPrivateMessage(title, description, imagePath, cap, Agente, db) {
     console.log("Inizio l'invio dei messaggi privati.");
 
-    // Carica l'immagine richiesta
+    // Carica l'immagine e ottieni l'ID
     const imageId = await uploadImage(imagePath);
 
     // Ottieni tutti i contatti privati dal database
-    const contacts = await ContactModel.GetPrivatesByCapAndAgente(
-      cap,
-      Agente,
-      db
-    );
+    const contacts = await ContactModel.GetPrivatesByCapAndAgente(cap, Agente, db);
 
     if (contacts.length > 250) {
       console.log("I contatti sono più di 250. Gestione a batch attivata.");
@@ -48,12 +41,7 @@ class Messages {
         );
 
         // Invia messaggi per il batch corrente
-        await this.sendBatchPrivateMessages(
-          currentBatch,
-          title,
-          description,
-          imageId
-        );
+        await this.sendBatchPrivateMessages(currentBatch, title, description, imageId);
 
         batchNumber++;
 
@@ -62,7 +50,7 @@ class Messages {
           console.log("Aspetto 26 ore prima del prossimo batch.");
           await new Promise((resolve) =>
             setTimeout(resolve, 26 * 60 * 60 * 1000)
-          ); // 26 ore
+          );
         }
       }
 
@@ -74,24 +62,22 @@ class Messages {
       console.log("Tutti i messaggi sono stati inviati.");
     } else {
       // Se i contatti sono meno di 250, invia tutto direttamente
-      await this.sendBatchPrivateMessages(
-        contacts,
-        title,
-        description,
-        imageId
-      );
+      await this.sendBatchPrivateMessages(contacts, title, description, imageId);
       console.log("Tutti i messaggi sono stati inviati.");
     }
   }
 
+  /**
+   * Invio effettivo (batch) dei messaggi privati (non premium) con immagine e testo.
+   */
   static async sendBatchPrivateMessages(contacts, title, description, imageId) {
-    console.log(contacts, title, description, imageId);
     for (const contact of contacts) {
       const name = contact.CustomerFullName;
       const phoneNumber = contact.CustomerPhone;
       if (!phoneNumber) {
         continue;
       }
+
       try {
         const response = await axios({
           url: "https://graph.facebook.com/v21.0/544175122111846/messages",
@@ -102,18 +88,24 @@ class Messages {
           },
           data: JSON.stringify({
             messaging_product: "whatsapp",
-            to: "+39" + phoneNumber, // Prefisso italiano e numero di telefono
-            type: "text",
-            text: {
-              body: "Ciao " + name + "! \n" + title + "\n" + description,
+            to: "+39" + phoneNumber,
+            type: "image",
+            image: {
+              id: imageId,
+              caption: 
+`${title}
+Ciao ${name},
+${description}
+
+Se non desideri ricevere più comunicazioni di marketing,
+scrivi a: marketing@climawell.net
+
+Climawell S.R.L.`
             },
           }),
         });
 
-        console.log(
-          `Messaggio inviato a ${name} (${phoneNumber}):`,
-          response.data
-        );
+        console.log(`Messaggio inviato a ${name} (${phoneNumber}):`, response.data);
       } catch (error) {
         console.error(
           `Errore nell'invio del messaggio a ${name} (${phoneNumber}):`,
@@ -123,25 +115,17 @@ class Messages {
     }
   }
 
-  static async sendCompanyMessage(
-    title,
-    description,
-    imagePath,
-    cap,
-    Agente,
-    db
-  ) {
+  /**
+   * Invio messaggi alle aziende (non premium) con immagine e testo.
+   */
+  static async sendCompanyMessage(title, description, imagePath, cap, Agente, db) {
     console.log("Inizio l'invio dei messaggi alle aziende.");
 
-    // Carica l'immagine richiesta
+    // Carica l'immagine e ottieni l'ID
     const imageId = await uploadImage(imagePath);
 
     // Ottieni tutti i contatti aziendali dal database
-    const contacts = await ContactModel.GetCompaniesByCapAndAgente(
-      cap,
-      Agente,
-      db
-    );
+    const contacts = await ContactModel.GetCompaniesByCapAndAgente(cap, Agente, db);
 
     if (contacts.length > 250) {
       console.log("I contatti sono più di 250. Gestione a batch attivata.");
@@ -154,7 +138,6 @@ class Messages {
       const batchSize = 250;
       let batchNumber = 0;
 
-      // Dividi i contatti in batch
       while (batchNumber * batchSize < contacts.length) {
         const start = batchNumber * batchSize;
         const end = start + batchSize;
@@ -167,12 +150,7 @@ class Messages {
         );
 
         // Invia messaggi per il batch corrente
-        await this.sendCompanyBatchMessages(
-          currentBatch,
-          title,
-          description,
-          imageId
-        );
+        await this.sendCompanyBatchMessages(currentBatch, title, description, imageId);
 
         batchNumber++;
 
@@ -181,7 +159,7 @@ class Messages {
           console.log("Aspetto 26 ore prima del prossimo batch.");
           await new Promise((resolve) =>
             setTimeout(resolve, 26 * 60 * 60 * 1000)
-          ); // 26 ore
+          );
         }
       }
 
@@ -193,16 +171,14 @@ class Messages {
       console.log("Tutti i messaggi sono stati inviati.");
     } else {
       // Se i contatti sono meno di 250, invia tutto direttamente
-      await this.sendCompanyBatchMessages(
-        contacts,
-        title,
-        description,
-        imageId
-      );
+      await this.sendCompanyBatchMessages(contacts, title, description, imageId);
       console.log("Tutti i messaggi sono stati inviati.");
     }
   }
 
+  /**
+   * Invio effettivo (batch) dei messaggi alle aziende (non premium) con immagine e testo.
+   */
   static async sendCompanyBatchMessages(contacts, title, description, imageId) {
     for (const contact of contacts) {
       const name = contact.CompanyName;
@@ -210,6 +186,7 @@ class Messages {
       if (!phoneNumber) {
         continue;
       }
+
       try {
         const response = await axios({
           url: "https://graph.facebook.com/v21.0/544175122111846/messages",
@@ -220,51 +197,24 @@ class Messages {
           },
           data: JSON.stringify({
             messaging_product: "whatsapp",
-            to: "+39" + phoneNumber, // Prefisso italiano e numero di telefono
-            type: "template",
-            template: {
-              name: "climawellmarketingtemplate",
-              language: {
-                code: "en_US",
-              },
-              components: [
-                {
-                  type: "header",
-                  parameters: [
-                    {
-                      type: "image",
-                      image: {
-                        id: imageId, // ID immagine già caricato
-                      },
-                    },
-                  ],
-                },
-                {
-                  type: "body",
-                  parameters: [
-                    {
-                      type: "text",
-                      text: title, // Titolo del messaggio
-                    },
-                    {
-                      type: "text",
-                      text: name, // Nome dell'azienda
-                    },
-                    {
-                      type: "text",
-                      text: description, // Descrizione del messaggio
-                    },
-                  ],
-                },
-              ],
+            to: "+39" + phoneNumber,
+            type: "image",
+            image: {
+              id: imageId,
+              caption:
+`${title}
+Ciao ${name},
+${description}
+
+Se non desideri ricevere più comunicazioni di marketing,
+scrivi a: marketing@climawell.net
+
+Climawell S.R.L.`
             },
           }),
         });
 
-        console.log(
-          `Messaggio inviato a ${name} (${phoneNumber}):`,
-          response.data
-        );
+        console.log(`Messaggio inviato a ${name} (${phoneNumber}):`, response.data);
       } catch (error) {
         console.error(
           `Errore nell'invio del messaggio a ${name} (${phoneNumber}):`,
@@ -274,25 +224,17 @@ class Messages {
     }
   }
 
-  static async sendPrivatePremiumMessage(
-    title,
-    description,
-    imagePath,
-    cap,
-    Agente,
-    db
-  ) {
+  /**
+   * Invio messaggi privati premium con immagine e testo.
+   */
+  static async sendPrivatePremiumMessage(title, description, imagePath, cap, Agente, db) {
     console.log("Inizio l'invio dei messaggi privati premium.");
 
-    // Carica l'immagine richiesta
+    // Carica l'immagine e ottieni l'ID
     const imageId = await uploadImage(imagePath);
 
     // Ottieni tutti i contatti privati premium dal database
-    const contacts = await ContactModel.GetPrivatesPremiumByCapAndAgente(
-      cap,
-      Agente,
-      db
-    );
+    const contacts = await ContactModel.GetPrivatesPremiumByCapAndAgente(cap, Agente, db);
 
     if (contacts.length > 250) {
       console.log("I contatti sono più di 250. Gestione a batch attivata.");
@@ -305,7 +247,6 @@ class Messages {
       const batchSize = 250;
       let batchNumber = 0;
 
-      // Dividi i contatti in batch
       while (batchNumber * batchSize < contacts.length) {
         const start = batchNumber * batchSize;
         const end = start + batchSize;
@@ -332,7 +273,7 @@ class Messages {
           console.log("Aspetto 26 ore prima del prossimo batch.");
           await new Promise((resolve) =>
             setTimeout(resolve, 26 * 60 * 60 * 1000)
-          ); // 26 ore
+          );
         }
       }
 
@@ -354,98 +295,17 @@ class Messages {
     }
   }
 
-  static async sendPrivatePremiumMessage(
-    title,
-    description,
-    imagePath,
-    cap,
-    Agente,
-    db
-  ) {
-    console.log("Inizio l'invio dei messaggi privati premium.");
-
-    // Carica l'immagine richiesta
-    const imageId = await uploadImage(imagePath);
-
-    // Ottieni tutti i contatti privati premium dal database
-    const contacts = await ContactModel.GetPrivatesPremiumByCapAndAgente(
-      cap,
-      Agente,
-      db
-    );
-
-    if (contacts.length > 250) {
-      console.log("I contatti sono più di 250. Gestione a batch attivata.");
-
-      // Imposta BlockWhatsappCampaign a true
-      await db.query(
-        `UPDATE public."Utils" SET value = true WHERE name = 'blockWhatsappCampaign'`
-      );
-
-      const batchSize = 250;
-      let batchNumber = 0;
-
-      // Dividi i contatti in batch
-      while (batchNumber * batchSize < contacts.length) {
-        const start = batchNumber * batchSize;
-        const end = start + batchSize;
-        const currentBatch = contacts.slice(start, end);
-
-        console.log(
-          `Invio batch ${batchNumber + 1}. Contatti da ${start + 1} a ${
-            end > contacts.length ? contacts.length : end
-          }.`
-        );
-
-        // Invia messaggi per il batch corrente
-        await this.sendPrivatePremiumBatchMessages(
-          currentBatch,
-          title,
-          description,
-          imageId
-        );
-
-        batchNumber++;
-
-        // Se ci sono altri batch, aspetta 26 ore
-        if (batchNumber * batchSize < contacts.length) {
-          console.log("Aspetto 26 ore prima del prossimo batch.");
-          await new Promise((resolve) =>
-            setTimeout(resolve, 26 * 60 * 60 * 1000)
-          ); // 26 ore
-        }
-      }
-
-      // Reimposta BlockWhatsappCampaign a false
-      await db.query(
-        `UPDATE public."Utils" SET value = false WHERE name = 'blockWhatsappCampaign'`
-      );
-
-      console.log("Tutti i messaggi sono stati inviati.");
-    } else {
-      // Se i contatti sono meno di 250, invia tutto direttamente
-      await this.sendPrivatePremiumBatchMessages(
-        contacts,
-        title,
-        description,
-        imageId
-      );
-      console.log("Tutti i messaggi sono stati inviati.");
-    }
-  }
-
-  static async sendPrivatePremiumBatchMessages(
-    contacts,
-    title,
-    description,
-    imageId
-  ) {
+  /**
+   * Invio effettivo (batch) dei messaggi privati premium con immagine e testo.
+   */
+  static async sendPrivatePremiumBatchMessages(contacts, title, description, imageId) {
     for (const contact of contacts) {
       const name = contact.CustomerFullName;
       const phoneNumber = contact.CustomerPhone;
       if (!phoneNumber) {
         continue;
       }
+
       try {
         const response = await axios({
           url: "https://graph.facebook.com/v21.0/544175122111846/messages",
@@ -456,51 +316,24 @@ class Messages {
           },
           data: JSON.stringify({
             messaging_product: "whatsapp",
-            to: "+39" + phoneNumber, // Prefisso italiano e numero di telefono
-            type: "template",
-            template: {
-              name: "climawellmarketingtemplate",
-              language: {
-                code: "en_US",
-              },
-              components: [
-                {
-                  type: "header",
-                  parameters: [
-                    {
-                      type: "image",
-                      image: {
-                        id: imageId, // ID immagine già caricato
-                      },
-                    },
-                  ],
-                },
-                {
-                  type: "body",
-                  parameters: [
-                    {
-                      type: "text",
-                      text: title, // Titolo del messaggio
-                    },
-                    {
-                      type: "text",
-                      text: name, // Nome del cliente
-                    },
-                    {
-                      type: "text",
-                      text: description, // Descrizione del messaggio
-                    },
-                  ],
-                },
-              ],
+            to: "+39" + phoneNumber,
+            type: "image",
+            image: {
+              id: imageId,
+              caption:
+`${title}
+Ciao ${name},
+${description}
+
+Se non desideri ricevere più comunicazioni di marketing,
+scrivi a: marketing@climawell.net
+
+Climawell S.R.L.`
             },
           }),
         });
 
-        console.log(
-          `Messaggio inviato a ${name} (${phoneNumber}):`,
-          response.data
-        );
+        console.log(`Messaggio inviato a ${name} (${phoneNumber}):`, response.data);
       } catch (error) {
         console.error(
           `Errore nell'invio del messaggio a ${name} (${phoneNumber}):`,
@@ -510,25 +343,17 @@ class Messages {
     }
   }
 
-  static async sendCompanyPremiumMessage(
-    title,
-    description,
-    imagePath,
-    cap,
-    Agente,
-    db
-  ) {
+  /**
+   * Invio messaggi premium alle aziende con immagine e testo.
+   */
+  static async sendCompanyPremiumMessage(title, description, imagePath, cap, Agente, db) {
     console.log("Inizio l'invio dei messaggi premium alle aziende.");
 
-    // Carica l'immagine richiesta
+    // Carica l'immagine e ottieni l'ID
     const imageId = await uploadImage(imagePath);
 
     // Ottieni tutti i contatti aziendali premium dal database
-    const contacts = await ContactModel.GetCompaniesPremiumByCapAndAgente(
-      cap,
-      Agente,
-      db
-    );
+    const contacts = await ContactModel.GetCompaniesPremiumByCapAndAgente(cap, Agente, db);
 
     if (contacts.length > 250) {
       console.log("I contatti sono più di 250. Gestione a batch attivata.");
@@ -541,7 +366,6 @@ class Messages {
       const batchSize = 250;
       let batchNumber = 0;
 
-      // Dividi i contatti in batch
       while (batchNumber * batchSize < contacts.length) {
         const start = batchNumber * batchSize;
         const end = start + batchSize;
@@ -568,7 +392,7 @@ class Messages {
           console.log("Aspetto 26 ore prima del prossimo batch.");
           await new Promise((resolve) =>
             setTimeout(resolve, 26 * 60 * 60 * 1000)
-          ); // 26 ore
+          );
         }
       }
 
@@ -590,18 +414,17 @@ class Messages {
     }
   }
 
-  static async sendCompanyPremiumBatchMessages(
-    contacts,
-    title,
-    description,
-    imageId
-  ) {
+  /**
+   * Invio effettivo (batch) dei messaggi premium alle aziende con immagine e testo.
+   */
+  static async sendCompanyPremiumBatchMessages(contacts, title, description, imageId) {
     for (const contact of contacts) {
       const name = contact.CompanyName;
       const phoneNumber = contact.CompanyPhone;
       if (!phoneNumber) {
         continue;
       }
+
       try {
         const response = await axios({
           url: "https://graph.facebook.com/v21.0/544175122111846/messages",
@@ -612,51 +435,24 @@ class Messages {
           },
           data: JSON.stringify({
             messaging_product: "whatsapp",
-            to: "+39" + phoneNumber, // Prefisso italiano e numero di telefono
-            type: "template",
-            template: {
-              name: "climawellmarketingtemplate",
-              language: {
-                code: "en_US",
-              },
-              components: [
-                {
-                  type: "header",
-                  parameters: [
-                    {
-                      type: "image",
-                      image: {
-                        id: imageId, // ID immagine già caricato
-                      },
-                    },
-                  ],
-                },
-                {
-                  type: "body",
-                  parameters: [
-                    {
-                      type: "text",
-                      text: title, // Titolo del messaggio
-                    },
-                    {
-                      type: "text",
-                      text: name, // Nome del cliente
-                    },
-                    {
-                      type: "text",
-                      text: description, // Descrizione del messaggio
-                    },
-                  ],
-                },
-              ],
+            to: "+39" + phoneNumber,
+            type: "image",
+            image: {
+              id: imageId,
+              caption:
+`${title}
+Ciao ${name},
+${description}
+
+Se non desideri ricevere più comunicazioni di marketing,
+scrivi a: marketing@climawell.net
+
+Climawell S.R.L.`
             },
           }),
         });
 
-        console.log(
-          `Messaggio inviato a ${name} (${phoneNumber}):`,
-          response.data
-        );
+        console.log(`Messaggio inviato a ${name} (${phoneNumber}):`, response.data);
       } catch (error) {
         console.error(
           `Errore nell'invio del messaggio a ${name} (${phoneNumber}):`,
@@ -666,44 +462,25 @@ class Messages {
     }
   }
 
-  static async sendPremiumMessage(
-    title,
-    description,
-    imagePath,
-    cap,
-    Agente,
-    db
-  ) {
-    console.log(
-      "Inizio l'invio di tutti i messaggi premium (privati e aziende)."
-    );
+  /**
+   * Invio in parallelo di tutti i messaggi premium (privati e aziende).
+   */
+  static async sendPremiumMessage(title, description, imagePath, cap, Agente, db) {
+    console.log("Inizio l'invio di tutti i messaggi premium (privati e aziende).");
 
-    // Avvia l'invio dei messaggi premium privati e aziendali in parallelo
+    // Invia in parallelo
     await Promise.all([
-      this.sendPrivatePremiumMessage(
-        title,
-        description,
-        imagePath,
-        cap,
-        Agente,
-        db
-      ),
-      this.sendCompanyPremiumMessage(
-        title,
-        description,
-        imagePath,
-        cap,
-        Agente,
-        db
-      ),
+      this.sendPrivatePremiumMessage(title, description, imagePath, cap, Agente, db),
+      this.sendCompanyPremiumMessage(title, description, imagePath, cap, Agente, db),
     ]);
 
     console.log("Tutti i messaggi premium sono stati inviati.");
   }
 }
 
-const FormData = require("form-data");
-
+/**
+ * Funzione di supporto per caricare l'immagine su WhatsApp e ottenere l'ID da usare nei messaggi.
+ */
 async function uploadImage(imagePath) {
   const data = new FormData();
   data.append("messaging_product", "whatsapp");
@@ -722,12 +499,9 @@ async function uploadImage(imagePath) {
     });
 
     console.log("Image uploaded successfully:", response.data);
-    return response.data.id; // Assuming `id` is the field that holds the valid media ID
+    return response.data.id; // `id` è l'ID da usare come reference all'immagine
   } catch (error) {
-    console.error(
-      "Error uploading image:",
-      error.response?.data || error.message
-    );
+    console.error("Error uploading image:", error.response?.data || error.message);
     throw error;
   }
 }
