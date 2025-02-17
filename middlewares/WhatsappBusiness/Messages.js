@@ -103,31 +103,9 @@ class Messages {
           data: JSON.stringify({
             messaging_product: "whatsapp",
             to: "+39" + phoneNumber, // Prefisso italiano e numero di telefono
-            type: "template",
-            template: {
-              name: "climawellmarketingtemplate",
-              language: {
-                code: "en_US",
-              },
-              components: [
-                {
-                  type: "body",
-                  parameters: [
-                    {
-                      type: "text",
-                      text: title, // Titolo del messaggio
-                    },
-                    {
-                      type: "text",
-                      text: name, // Nome dell'azienda
-                    },
-                    {
-                      type: "text",
-                      text: description, // Descrizione del messaggio
-                    },
-                  ],
-                },
-              ],
+            type: "text",
+            text: {
+              body: "Ciao " + name + "! \n" + title + "\n" + description,
             },
           }),
         });
