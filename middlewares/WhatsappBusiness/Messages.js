@@ -587,29 +587,14 @@ _Se non desideri ricevere piu comunicazioni di marketing scrivi alla mail:_
           to: "+39" + phoneNumber,
           type: "template",
           template: {
-            name: "marcousaquesto",
+            name: "perfavore",
             language: {
-              code: "en_GB",
+              code: "en_US",
             },
-            components: [
-              {
-                type: "body",
-                parameters: [
-                  { type: "text", text: "Elemento 1" },
-                  { type: "text", text: "Elemento 2" },
-                  { type: "text", text: "Elemento 3" },
-                  { type: "text", text: "Elemento 4" },
-                  { type: "text", text: "Elemento 5" },
-                  { type: "text", text: "Elemento 6" },
-                  { type: "text", text: "Elemento 7" },
-                  { type: "text", text: "Elemento 8" }
-                ]
-              }
-            ]
+            components: [],
           },
         }),
       });
-      
 
       console.log(
         `Messaggio inviato a ${name} (${phoneNumber}):`,
