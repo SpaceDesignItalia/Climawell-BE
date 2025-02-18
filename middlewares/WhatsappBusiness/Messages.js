@@ -438,17 +438,18 @@ async function uploadImage(imagePath) {
 function convertHtmlToWhatsApp(html) {
   if (!html) return "";
   return html
-    .replace(/<strong>(.*?)<\/strong>/gi, '*$1*')
-    .replace(/<b>(.*?)<\/b>/gi, '*$1*')
-    .replace(/<em>(.*?)<\/em>/gi, '_$1_')
-    .replace(/<i>(.*?)<\/i>/gi, '_$1_')
-    .replace(/<del>(.*?)<\/del>/gi, '~$1~')
-    .replace(/<strike>(.*?)<\/strike>/gi, '~$1~')
+    .replace(/<strong>\s*(.*?)\s*<\/strong>/gi, '*$1*')
+    .replace(/<b>\s*(.*?)\s*<\/b>/gi, '*$1*')
+    .replace(/<em>\s*(.*?)\s*<\/em>/gi, '_$1_')
+    .replace(/<i>\s*(.*?)\s*<\/i>/gi, '_$1_')
+    .replace(/<del>\s*(.*?)\s*<\/del>/gi, '~$1~')
+    .replace(/<strike>\s*(.*?)\s*<\/strike>/gi, '~$1~')
     .replace(/<p>/gi, '\n')
     .replace(/<\/p>/gi, '\n')
     .replace(/<br\s*\/?>/gi, '\n')
     .replace(/<[^>]+>/g, '')
     .trim();
 }
+
 
 module.exports = Messages;
