@@ -585,29 +585,11 @@ _Se non desideri ricevere piu comunicazioni di marketing scrivi alla mail:_
         data: JSON.stringify({
           messaging_product: "WhatsApp",
           to: "+39" + phoneNumber,
-          type: "interactive",
-          interactive: {
-            type: "button",
-            body: {
-              text: "Ciao! Vuoi ricevere le nostre offerte esclusive via WhatsApp?",
-            },
-            action: {
-              buttons: [
-                {
-                  type: "reply",
-                  reply: {
-                    id: "accetto_id",
-                    title: "Accetto",
-                  },
-                },
-                {
-                  type: "reply",
-                  reply: {
-                    id: "stop_id",
-                    title: "Stop",
-                  },
-                },
-              ],
+          type: "template",
+          template: {
+            name: "start_conversation",
+            language: {
+              code: "it",
             },
           },
         }),
