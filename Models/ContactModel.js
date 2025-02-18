@@ -346,13 +346,18 @@ class ContactModel {
       }
 
       // Se capList e agenteList non sono array, ritorniamo errore
-      if (!Array.isArray(capList) || !Array.isArray(agenteList)) {
+      if (
+        (!Array.isArray(capList) && capList !== null) ||
+        (!Array.isArray(agenteList) && agenteList !== null)
+      ) {
         return reject(new Error("Both capList and agenteList must be arrays"));
       }
 
       // Estrai i CAP e gli agenti dalle rispettive liste
       const capValues = capList.map((entry) => `'${entry.Cap}'`); // Aggiungiamo le virgolette
       const agenteValues = agenteList.map((agent) => `'${agent.code}'`); // Aggiungiamo le virgolette
+
+      console.log(capValues, agenteValues);
 
       let query;
 
@@ -376,9 +381,10 @@ class ContactModel {
         query = `SELECT "CustomerId", CONCAT("CustomerName", ' ', "CustomerSurname") AS "CustomerFullName", "CustomerEmail", "CustomerPhone", "PolicyAccepted", "Agente", "Cap"
                       FROM public."Customer"
                       INNER JOIN public."Cap" ON "Customer"."Cap" = "Cap"."cap"
-                      WHERE "Cap" IN ($1) OR "generalCap" IN ($1)
+                      WHERE "Cap" IN (${capValues}) OR "generalCap" IN (${capValues})
                       ORDER BY "CustomerId" ASC`;
-        db.query(query, [capValues], (error, result) => {
+        console.log(query);
+        db.query(query, (error, result) => {
           if (error) {
             reject(error);
           }
@@ -388,9 +394,9 @@ class ContactModel {
         // Se solo agenteList è fornita
         query = `SELECT "CustomerId", CONCAT("CustomerName", ' ', "CustomerSurname") AS "CustomerFullName", "CustomerEmail", "CustomerPhone", "PolicyAccepted", "Agente", "Cap"
                       FROM public."Customer"
-                      WHERE "Agente" IN ($1)
+                      WHERE "Agente" IN (${agenteValues})
                       ORDER BY "CustomerId" ASC`;
-        db.query(query, [agenteValues], (error, result) => {
+        db.query(query, (error, result) => {
           if (error) {
             reject(error);
           }
