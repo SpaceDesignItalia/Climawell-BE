@@ -444,12 +444,14 @@ function convertHtmlToWhatsApp(html) {
     .replace(/<i>\s*(.*?)\s*<\/i>/gi, '_$1_')
     .replace(/<del>\s*(.*?)\s*<\/del>/gi, '~$1~')
     .replace(/<strike>\s*(.*?)\s*<\/strike>/gi, '~$1~')
+    .replace(/<u>\s*(.*?)\s*<\/u>/gi, '_$1_')
     .replace(/<p>/gi, '\n')
     .replace(/<\/p>/gi, '\n')
     .replace(/<br\s*\/?>/gi, '\n')
     .replace(/<[^>]+>/g, '')
     .trim();
 }
+
 
 
 module.exports = Messages;
