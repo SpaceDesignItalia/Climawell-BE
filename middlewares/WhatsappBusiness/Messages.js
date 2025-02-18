@@ -589,7 +589,7 @@ _Se non desideri ricevere piu comunicazioni di marketing scrivi alla mail:_
           template: {
             name: "fraud_alert_2",
             language: {
-              code: "uk",
+              code: "en_US",
             },
             components: [],
           },
