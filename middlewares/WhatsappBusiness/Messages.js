@@ -583,13 +583,32 @@ _Se non desideri ricevere piu comunicazioni di marketing scrivi alla mail:_
           "Content-Type": "application/json",
         },
         data: JSON.stringify({
-          messaging_product: "whatsapp",
+          messaging_product: "WhatsApp",
           to: "+39" + phoneNumber,
-          type: "text",
-          text: {
-            body: `Ciao ${name},
-sei stato inserito nella lista contatti di Climawell S.r.l. per ricevere informazioni e novità riguardanti i nostri prodotti.
-Per poter essere ricontattato, rispondi a questo messaggio per dare il tuo consenso.`,
+          type: "interactive",
+          interactive: {
+            type: "button",
+            body: {
+              text: "Ciao! Vuoi ricevere le nostre offerte esclusive via WhatsApp?",
+            },
+            action: {
+              buttons: [
+                {
+                  type: "reply",
+                  reply: {
+                    id: "accetto_id",
+                    title: "Accetto",
+                  },
+                },
+                {
+                  type: "reply",
+                  reply: {
+                    id: "stop_id",
+                    title: "Stop",
+                  },
+                },
+              ],
+            },
           },
         }),
       });
