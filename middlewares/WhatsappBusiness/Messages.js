@@ -3,6 +3,38 @@ const ContactModel = require("../../Models/ContactModel");
 require("dotenv").config();
 const fs = require("fs");
 const FormData = require("form-data");
+const TurndownService = require("turndown");
+
+// Inizializza Turndown con le opzioni di default
+const turndownService = new TurndownService();
+
+// Aggiungi regole personalizzate per il formato WhatsApp
+turndownService.addRule('whatsAppBold', {
+  filter: ['strong', 'b'],
+  replacement: (content) => `*${content.trim()}*`
+});
+
+turndownService.addRule('whatsAppItalic', {
+  filter: ['em', 'i'],
+  replacement: (content) => `_${content.trim()}_`
+});
+
+turndownService.addRule('whatsAppStrike', {
+  filter: ['del', 'strike'],
+  replacement: (content) => `~${content.trim()}~`
+});
+
+turndownService.addRule('whatsAppUnderline', {
+  filter: ['u'],
+  // WhatsApp non supporta l'underline, qui lo convertiamo in corsivo come esempio
+  replacement: (content) => `_${content.trim()}_`
+});
+
+// Funzione che utilizza Turndown per convertire HTML in formattazione WhatsApp
+function convertHtmlToWhatsApp(html) {
+  if (!html) return "";
+  return turndownService.turndown(html).trim();
+}
 
 class Messages {
   /**
@@ -93,7 +125,7 @@ class Messages {
             type: "image",
             image: {
               id: imageId,
-              caption: 
+              caption:
 `*${title}*
 Ciao *${name}*.
 ${safeDescription}
@@ -426,32 +458,5 @@ async function uploadImage(imagePath) {
     throw error;
   }
 }
-
-/**
- * Converte una stringa HTML in formattazione WhatsApp (Markdown-like):
- * - <strong> o <b> -> *testo*
- * - <em> o <i> -> _testo_
- * - <del> o <strike> -> ~testo~
- * - <p> e <br> -> newline
- * Rimuove anche eventuali altri tag HTML.
- */
-function convertHtmlToWhatsApp(html) {
-  if (!html) return "";
-  return html
-    .replace(/<strong>\s*(.*?)\s*<\/strong>/gi, '*$1*')
-    .replace(/<b>\s*(.*?)\s*<\/b>/gi, '*$1*')
-    .replace(/<em>\s*(.*?)\s*<\/em>/gi, '_$1_')
-    .replace(/<i>\s*(.*?)\s*<\/i>/gi, '_$1_')
-    .replace(/<del>\s*(.*?)\s*<\/del>/gi, '~$1~')
-    .replace(/<strike>\s*(.*?)\s*<\/strike>/gi, '~$1~')
-    .replace(/<u>\s*(.*?)\s*<\/u>/gi, '_$1_')
-    .replace(/<p>/gi, '\n')
-    .replace(/<\/p>/gi, '\n')
-    .replace(/<br\s*\/?>/gi, '\n')
-    .replace(/<[^>]+>/g, '')
-    .trim();
-}
-
-
 
 module.exports = Messages;
