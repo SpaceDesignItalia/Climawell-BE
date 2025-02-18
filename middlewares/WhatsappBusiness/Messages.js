@@ -589,7 +589,7 @@ _Se non desideri ricevere piu comunicazioni di marketing scrivi alla mail:_
           template: {
             name: "marcousaquesto",
             language: {
-              code: "en_UK",
+              code: "en_GB",
             },
             components: [],
           },
