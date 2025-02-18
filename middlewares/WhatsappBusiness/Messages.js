@@ -591,7 +591,14 @@ _Se non desideri ricevere piu comunicazioni di marketing scrivi alla mail:_
             language: {
               code: "en_US",
             },
-            components: [],
+            components: "body",
+            parameters: [
+              { type: "text", text: "Elemento 1" },
+              { type: "text", text: "Elemento 2" },
+              { type: "text", text: "Elemento 3" },
+              { type: "text", text: "Elemento 4" },
+
+            ]
           },
         }),
       });
