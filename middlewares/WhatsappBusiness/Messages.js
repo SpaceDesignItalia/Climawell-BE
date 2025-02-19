@@ -587,9 +587,9 @@ _Se non desideri ricevere piu comunicazioni di marketing scrivi alla mail:_
           to: "+39" + phoneNumber,
           type: "template",
           template: {
-            name: "perfavore",
+            name: "start_conversation",
             language: {
-              code: "en_US",
+              code: "it",
             },
             components: [
               {
@@ -613,7 +613,7 @@ _Se non desideri ricevere piu comunicazioni di marketing scrivi alla mail:_
       );
     } catch (error) {
       console.error(
-        `Errore nell'invio del messaggio a ${name} (${phoneNumber}):`,
+        `Errore nell'invio del messaggio a ${name} (${"+39" + phoneNumber}):`,
         error.response?.data || error.message
       );
     }
