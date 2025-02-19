@@ -583,7 +583,7 @@ _Se non desideri ricevere piu comunicazioni di marketing scrivi alla mail:_
           "Content-Type": "application/json",
         },
         data: JSON.stringify({
-          messaging_product: "WhatsApp",
+          messaging_product: "whatsApp",
           to: "+39" + phoneNumber,
           type: "template",
           template: {
