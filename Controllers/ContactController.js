@@ -69,12 +69,12 @@ class ContactController {
         privacyFileName
       );
 
-      await Messages.sendStartMessage(
+      /*await Messages.sendStartMessage(
         db,
         JSON.parse(ContactData),
         ContactType,
         privacyFileName
-      );
+      );*/
 
       res.status(201).send("Cliente aggiunto con successo.");
     } catch (error) {
@@ -99,7 +99,7 @@ class ContactController {
 
       await ContactModel.UploadContacts(db, companies, customers);
 
-      await Messages.sendUploadMessage(db, companies, customers);
+      /*await Messages.sendUploadMessage(db, companies, customers);*/
       res.status(201).send("Clienti aggiunti con successo.");
     } catch (error) {
       console.error("Errore nell'aggiungere i clienti:", error);

@@ -34,7 +34,18 @@ turndownService.addRule("whatsAppUnderline", {
 // Funzione che utilizza Turndown per convertire HTML in formattazione WhatsApp
 function convertHtmlToWhatsApp(html) {
   if (!html) return "";
-  return turndownService.turndown(html).trim();
+
+  // Converti HTML in Markdown
+  let markdown = turndownService.turndown(html).trim();
+
+  // Gestisci i paragrafi
+  markdown = markdown.replace(/(?:\r\n|\r|\n)/g, "\n\n"); // Aggiungi una riga vuota tra i paragrafi
+
+  // Gestisci le liste
+  markdown = markdown.replace(/^\s*-\s+/gm, "* "); // Converti le liste non ordinate
+  markdown = markdown.replace(/^\s*\d+\.\s+/gm, "1. "); // Converti le liste ordinate (solo il primo numero)
+
+  return markdown;
 }
 
 class Messages {
@@ -176,15 +187,15 @@ class Messages {
                     },
                     {
                       type: "text",
-                      text: description, // Descrizione del messaggio
+                      text: safeDescription, // Descrizione del messaggio
                     },
                   ],
                 },
               ],
-          },
+            },
           }),
         });
-  
+
         console.log(
           `Messaggio inviato a ${name} (${phoneNumber}):`,
           response.data
@@ -318,15 +329,15 @@ class Messages {
                     },
                     {
                       type: "text",
-                      text: description, // Descrizione del messaggio
+                      text: safeDescription, // Descrizione del messaggio
                     },
                   ],
                 },
               ],
-          },
+            },
           }),
         });
-  
+
         console.log(
           `Messaggio inviato a ${name} (${phoneNumber}):`,
           response.data
@@ -465,15 +476,15 @@ class Messages {
                     },
                     {
                       type: "text",
-                      text: description, // Descrizione del messaggio
+                      text: safeDescription, // Descrizione del messaggio
                     },
                   ],
                 },
               ],
-          },
+            },
           }),
         });
-  
+
         console.log(
           `Messaggio inviato a ${name} (${phoneNumber}):`,
           response.data
@@ -612,15 +623,15 @@ class Messages {
                     },
                     {
                       type: "text",
-                      text: description, // Descrizione del messaggio
+                      text: safeDescription, // Descrizione del messaggio
                     },
                   ],
                 },
               ],
-          },
+            },
           }),
         });
-  
+
         console.log(
           `Messaggio inviato a ${name} (${phoneNumber}):`,
           response.data
@@ -699,7 +710,7 @@ class Messages {
             language: {
               code: "en_US",
             },
-            components: []
+            components: [],
           },
         }),
       });
