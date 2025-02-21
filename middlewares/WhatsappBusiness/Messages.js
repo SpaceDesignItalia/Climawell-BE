@@ -608,15 +608,15 @@ _Se non desideri ricevere piu comunicazioni di marketing scrivi alla mail:_
                 parameters: [
                   {
                     type: "text",
-                    text: title, // Titolo del messaggio
+                    text: "Esemio", // Titolo del messaggio
                   },
                   {
                     type: "text",
-                    text: name, // Nome del cliente
+                    text: "Luca", // Nome del cliente
                   },
                   {
                     type: "text",
-                    text: description, // Descrizione del messaggio
+                    text: "Carissimo salve ci sono i saldi venga a trovarci", // Descrizione del messaggio
                   },
                 ],
               },
