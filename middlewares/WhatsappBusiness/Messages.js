@@ -145,19 +145,46 @@ class Messages {
           data: JSON.stringify({
             messaging_product: "whatsapp",
             to: "+39" + phoneNumber,
-            type: "image",
-            image: {
-              id: imageId,
-              caption: `*${title}*
-Ciao *${name}*.
-${safeDescription}
-
-_Se non desideri ricevere piu comunicazioni di marketing scrivi alla mail:_
-*marketing@climawell.net*`,
-            },
+            type: "template",
+            template: {
+              name: "definitivo",
+              language: {
+                code: "en",
+              },
+              components: [
+                {
+                  type: "header",
+                  parameters: [
+                    {
+                      type: "image",
+                      image: {
+                        id: imageId, // ID immagine già caricato
+                      },
+                    },
+                  ],
+                },
+                {
+                  type: "body",
+                  parameters: [
+                    {
+                      type: "text",
+                      text: title, // Titolo del messaggio
+                    },
+                    {
+                      type: "text",
+                      text: name, // Nome del cliente
+                    },
+                    {
+                      type: "text",
+                      text: description, // Descrizione del messaggio
+                    },
+                  ],
+                },
+              ],
+          },
           }),
         });
-
+  
         console.log(
           `Messaggio inviato a ${name} (${phoneNumber}):`,
           response.data
@@ -587,41 +614,12 @@ _Se non desideri ricevere piu comunicazioni di marketing scrivi alla mail:_
           to: "+39" + phoneNumber,
           type: "template",
           template: {
-            name: "definitivo",
+            name: "fraud_alert_2",
             language: {
-              code: "en",
+              code: "en_US",
             },
-            components: [
-              {
-                type: "header",
-                parameters: [
-                  {
-                    type: "image",
-                    image: {
-                      id: imageId, // ID immagine già caricato
-                    },
-                  },
-                ],
-              },
-              {
-                type: "body",
-                parameters: [
-                  {
-                    type: "text",
-                    text: "Esemio", // Titolo del messaggio
-                  },
-                  {
-                    type: "text",
-                    text: "Luca", // Nome del cliente
-                  },
-                  {
-                    type: "text",
-                    text: "Carissimo salve ci sono i saldi venga a trovarci", // Descrizione del messaggio
-                  },
-                ],
-              },
-            ],
-        },
+            components: []
+          },
         }),
       });
 
