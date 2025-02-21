@@ -45,7 +45,12 @@ function convertHtmlToWhatsApp(html) {
   markdown = markdown.replace(/^\s*-\s+/gm, "* "); // Converti le liste non ordinate
   markdown = markdown.replace(/^\s*\d+\.\s+/gm, "1. "); // Converti le liste ordinate (solo il primo numero)
 
-  return markdown;
+  // Rimuovi caratteri non validi
+  markdown = markdown.replace(/[\n\t]/g, " "); // Rimuovi nuove righe e tabulazioni
+  markdown = markdown.replace(/ {2,}/g, " "); // Rimuovi spazi consecutivi
+  markdown = markdown.replace(/ {4,}/g, " "); // Rimuovi più di quattro spazi consecutivi
+
+  return markdown.trim(); // Rimuovi eventuali spazi all'inizio e alla fine
 }
 
 class Messages {
