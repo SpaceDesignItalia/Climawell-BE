@@ -587,9 +587,9 @@ _Se non desideri ricevere piu comunicazioni di marketing scrivi alla mail:_
           to: "+39" + phoneNumber,
           type: "template",
           template: {
-            name: "start_conversation",
+            name: "fraud_alert_2",
             language: {
-              code: "it",
+              code: "en_US",
             },
             components: []
           },
