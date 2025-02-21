@@ -587,12 +587,41 @@ _Se non desideri ricevere piu comunicazioni di marketing scrivi alla mail:_
           to: "+39" + phoneNumber,
           type: "template",
           template: {
-            name: "fraud_alert_2",
+            name: "definitivo",
             language: {
-              code: "en_US",
+              code: "en",
             },
-            components: []
-          },
+            components: [
+              {
+                type: "header",
+                parameters: [
+                  {
+                    type: "image",
+                    image: {
+                      id: imageId, // ID immagine già caricato
+                    },
+                  },
+                ],
+              },
+              {
+                type: "body",
+                parameters: [
+                  {
+                    type: "text",
+                    text: title, // Titolo del messaggio
+                  },
+                  {
+                    type: "text",
+                    text: name, // Nome del cliente
+                  },
+                  {
+                    type: "text",
+                    text: description, // Descrizione del messaggio
+                  },
+                ],
+              },
+            ],
+        },
         }),
       });
 
