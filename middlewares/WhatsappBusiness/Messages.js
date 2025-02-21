@@ -587,22 +587,11 @@ _Se non desideri ricevere piu comunicazioni di marketing scrivi alla mail:_
           to: "+39" + phoneNumber,
           type: "template",
           template: {
-            name: "start_conversation",
+            name: "hello_world",
             language: {
-              code: "it",
+              code: "en_US",
             },
-            components: [
-              {
-                type: "body",
-                parameters: [
-                  { type: "text", text: "Elemento 1" },// forse non e type text ma type number
-                  { type: "text", text: "Elemento 2" },
-                  { type: "text", text: "Elemento 3" },
-                  { type: "text", text: "Elemento 4" }
-                
-                ]
-              }
-            ]
+            components: []
           },
         }),
       });
