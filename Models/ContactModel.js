@@ -1,5 +1,5 @@
 class ContactModel {
-  static GetAllPrivate(isPremium, db) {
+  static GetAllPrivate(isPremium, Agente, db) {
     return new Promise((resolve, reject) => {
       const query = `SELECT "CustomerId", 
        CONCAT("CustomerName", ' ', "CustomerSurname") AS "CustomerFullName", 
@@ -9,10 +9,10 @@ class ContactModel {
        "Agente", 
        "Cap" 
         FROM public."Customer"
-        WHERE ($1 = true AND "IsPremium" = true) OR ($1 = false)
+        WHERE ($1 = true AND "IsPremium" = true AND "Agente" = $2) OR ($1 = false)
         ORDER BY "CustomerId" ASC;
         `;
-      db.query(query, [isPremium], (error, result) => {
+      db.query(query, [isPremium, Agente], (error, result) => {
         if (error) {
           reject(error);
         }
@@ -22,14 +22,14 @@ class ContactModel {
     });
   }
 
-  static GetAllCompany(isPremium, db) {
+  static GetAllCompany(isPremium, Agente, db) {
     return new Promise((resolve, reject) => {
       const query = `SELECT * 
       FROM public."Company" 
-      WHERE ($1 = true AND "IsPremium" = true) OR ($1 = false)
+      WHERE ($1 = true AND "IsPremium" = true AND "Agente" = $2) OR ($1 = false)
       ORDER BY "CompanyId" ASC;
       `;
-      db.query(query, [isPremium], (error, result) => {
+      db.query(query, [isPremium, Agente], (error, result) => {
         if (error) {
           reject(error);
         }

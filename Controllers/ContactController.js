@@ -6,7 +6,8 @@ class ContactController {
   static async GetAllPrivate(req, res, db) {
     try {
       const isPremium = req.query.isPremium;
-      const contacts = await ContactModel.GetAllPrivate(isPremium, db);
+      const Agente = req.session.account.Agente;
+      const contacts = await ContactModel.GetAllPrivate(isPremium, Agente, db);
       res.status(200).json(contacts);
     } catch (error) {
       console.error("Errore nell'recuperare i clienti:", error);
@@ -16,7 +17,8 @@ class ContactController {
   static async GetAllCompany(req, res, db) {
     try {
       const isPremium = req.query.isPremium;
-      const contacts = await ContactModel.GetAllCompany(isPremium, db);
+      const Agente = req.session.account.Agente;
+      const contacts = await ContactModel.GetAllCompany(isPremium, Agente, db);
       res.status(200).json(contacts);
     } catch (error) {
       console.error("Errore nell'recuperare i clienti:", error);
