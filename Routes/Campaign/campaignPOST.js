@@ -38,6 +38,14 @@ const campaignPOST = (db) => {
     }
   );
 
+  // Route for POST requests
+  router.post("/webhook", (req, res) => {
+    const timestamp = new Date().toISOString().replace("T", " ").slice(0, 19);
+    console.log(`\n\nWebhook received ${timestamp}\n`);
+    console.log(JSON.stringify(req.body, null, 2));
+    res.status(200).end();
+  });
+
   return router; // Ritorna il router per consentire l'utilizzo da parte dell'app principale
 };
 
