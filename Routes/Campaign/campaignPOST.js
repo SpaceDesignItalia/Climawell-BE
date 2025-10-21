@@ -38,6 +38,8 @@ const campaignPOST = (db) => {
     }
   );
 
+  // Webhook endpoint rimosso - ora gestito alla root dell'applicazione
+
   return router; // Ritorna il router per consentire l'utilizzo da parte dell'app principale
 };
 

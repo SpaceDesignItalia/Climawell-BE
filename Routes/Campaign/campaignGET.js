@@ -40,6 +40,8 @@ const campaignGET = (db) => {
     CampaignController.CheckWhatsappBlock(req, res, db);
   });
 
+  // Webhook endpoint rimosso - ora gestito alla root dell'applicazione
+
   return router; // Return the router to allow usage by the main app
 };
 

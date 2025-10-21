@@ -1,22 +1,12 @@
-const nodemailer = require("nodemailer");
+const sgMail = require("@sendgrid/mail");
 const fs = require("fs");
 const path = require("path");
 const ContactModel = require("../../Models/ContactModel");
 
-const mailData = {
-  mail: "marketing@climawell.net",
-  pass: "@Gemellini04",
-};
-
-const transporter = nodemailer.createTransport({
-  host: "smtp.ionos.it",
-  port: 587,
-  secure: false,
-  auth: {
-    user: mailData.mail,
-    pass: mailData.pass,
-  },
-});
+// Configurazione SendGrid
+sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+//sgMail.setDataResidency("eu");
+// decommentare la riga sopra se si sta inviando mail usando un subuser regionale EU
 
 function generateTextVersion(params) {
   return `
@@ -54,8 +44,6 @@ class EmailService {
         agente,
         db
       );
-
-      console.log(contacts);
 
       if (!contacts?.length) return;
 
@@ -102,10 +90,7 @@ class EmailService {
             .replace(/\${image}/g, `cid:${imageId}`);
 
           const emailOptions = {
-            from: {
-              name: "Climawell SRL",
-              address: mailData.mail,
-            },
+            from: "marketing@climawell.net",
             to: email,
             subject: title,
             text: textContent,
@@ -113,18 +98,14 @@ class EmailService {
             attachments: [
               {
                 filename: path.basename(imagePath),
-                path: imagePath,
-                cid: imageId,
+                content: fs.readFileSync(imagePath).toString("base64"),
+                type: "image/jpeg",
+                disposition: "attachment",
               },
             ],
-            headers: {
-              "X-Entity-Ref-ID": `private-${Date.now()}-${token}`,
-              "List-Unsubscribe": `<${unsubscribeUrl}>`,
-              "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
-            },
           };
 
-          await transporter.sendMail(emailOptions);
+          await sgMail.send(emailOptions);
           await db.query(
             `UPDATE public."Customer" SET "CampaignToken" = $1 WHERE "CustomerEmail" = $2;`,
             [token, email]
@@ -214,10 +195,7 @@ class EmailService {
             .replace(/\${image}/g, `cid:${imageId}`);
 
           const emailOptions = {
-            from: {
-              name: "Climawell SRL",
-              address: mailData.mail,
-            },
+            from: "marketing@climawell.net",
             to: email,
             subject: title,
             text: textContent,
@@ -225,18 +203,14 @@ class EmailService {
             attachments: [
               {
                 filename: path.basename(imagePath),
-                path: imagePath,
-                cid: imageId,
+                content: fs.readFileSync(imagePath).toString("base64"),
+                type: "image/jpeg",
+                disposition: "attachment",
               },
             ],
-            headers: {
-              "X-Entity-Ref-ID": `company-${Date.now()}-${token}`,
-              "List-Unsubscribe": `<${unsubscribeUrl}>`,
-              "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
-            },
           };
 
-          await transporter.sendMail(emailOptions);
+          await sgMail.send(emailOptions);
           await db.query(
             `UPDATE public."Company" SET "CampaignToken" = $1 WHERE "CompanyEmail" = $2;`,
             [token, email]
@@ -280,8 +254,6 @@ class EmailService {
         agente,
         db
       );
-
-      console.log(contacts);
 
       if (!contacts?.length) return;
 
@@ -328,10 +300,7 @@ class EmailService {
             .replace(/\${image}/g, `cid:${imageId}`);
 
           const emailOptions = {
-            from: {
-              name: "Climawell SRL",
-              address: mailData.mail,
-            },
+            from: "marketing@climawell.net",
             to: email,
             subject: title,
             text: textContent,
@@ -339,18 +308,14 @@ class EmailService {
             attachments: [
               {
                 filename: path.basename(imagePath),
-                path: imagePath,
-                cid: imageId,
+                content: fs.readFileSync(imagePath).toString("base64"),
+                type: "image/jpeg",
+                disposition: "attachment",
               },
             ],
-            headers: {
-              "X-Entity-Ref-ID": `private-${Date.now()}-${token}`,
-              "List-Unsubscribe": `<${unsubscribeUrl}>`,
-              "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
-            },
           };
 
-          await transporter.sendMail(emailOptions);
+          await sgMail.send(emailOptions);
           await db.query(
             `UPDATE public."Customer" SET "CampaignToken" = $1 WHERE "CustomerEmail" = $2;`,
             [token, email]
@@ -440,10 +405,7 @@ class EmailService {
             .replace(/\${image}/g, `cid:${imageId}`);
 
           const emailOptions = {
-            from: {
-              name: "Climawell SRL",
-              address: mailData.mail,
-            },
+            from: "marketing@climawell.net",
             to: email,
             subject: title,
             text: textContent,
@@ -451,18 +413,14 @@ class EmailService {
             attachments: [
               {
                 filename: path.basename(imagePath),
-                path: imagePath,
-                cid: imageId,
+                content: fs.readFileSync(imagePath).toString("base64"),
+                type: "image/jpeg",
+                disposition: "attachment",
               },
             ],
-            headers: {
-              "X-Entity-Ref-ID": `company-${Date.now()}-${token}`,
-              "List-Unsubscribe": `<${unsubscribeUrl}>`,
-              "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
-            },
           };
 
-          await transporter.sendMail(emailOptions);
+          await sgMail.send(emailOptions);
           await db.query(
             `UPDATE public."Company" SET "CampaignToken" = $1 WHERE "CompanyEmail" = $2;`,
             [token, email]
