@@ -69,6 +69,33 @@ if (process.env.ENVIRONMENT === "development") {
 // Inizializza Socket.IO sul server HTTPS
 const io = createSocketServer(server);
 
+// Webhook endpoint per WhatsApp (deve essere alla root per la validazione)
+app.get("/webhook", (req, res) => {
+  const {
+    "hub.mode": mode,
+    "hub.challenge": challenge,
+    "hub.verify_token": token,
+  } = req.query;
+
+  console.log("Webhook validation attempt:", { mode, token, challenge });
+
+  if (mode === "subscribe" && token === process.env.VERIFY_TOKEN) {
+    console.log("WEBHOOK VERIFIED");
+    res.status(200).send(challenge);
+  } else {
+    console.log("WEBHOOK VERIFICATION FAILED");
+    res.status(403).end();
+  }
+});
+
+// Webhook endpoint per ricevere i messaggi WhatsApp
+app.post("/webhook", (req, res) => {
+  const timestamp = new Date().toISOString().replace("T", " ").slice(0, 19);
+  console.log(`\n\nWebhook received ${timestamp}\n`);
+  console.log(JSON.stringify(req.body, null, 2));
+  res.status(200).end();
+});
+
 // Definisci le route principali
 app.use(PREFIX + "/Authentication", createAuthenticationRoutes(db));
 app.use(PREFIX + "/Products", createProductsRoutes(db));
