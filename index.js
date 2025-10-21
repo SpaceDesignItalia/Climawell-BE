@@ -28,42 +28,6 @@ const PORT = 3005; // Porta standard per HTTPS
 
 const db = require("./configs/Database");
 
-// Webhook endpoint per WhatsApp (DEVE essere PRIMA di tutti i middleware)
-app.get("/webhook", (req, res) => {
-  const {
-    "hub.mode": mode,
-    "hub.challenge": challenge,
-    "hub.verify_token": token,
-  } = req.query;
-
-  console.log("Webhook validation attempt:", { mode, token, challenge });
-
-  if (mode === "subscribe" && token === process.env.VERIFY_TOKEN) {
-    console.log("WEBHOOK VERIFIED");
-    res.status(200).send(challenge);
-  } else {
-    console.log("WEBHOOK VERIFICATION FAILED");
-    res.status(403).end();
-  }
-});
-
-// Webhook endpoint per ricevere i messaggi WhatsApp
-app.post("/webhook", (req, res) => {
-  const timestamp = new Date().toISOString().replace("T", " ").slice(0, 19);
-  console.log(`\n\nWebhook received ${timestamp}\n`);
-  console.log(JSON.stringify(req.body, null, 2));
-  res.status(200).end();
-});
-
-// Endpoint di test per verificare che il server funzioni
-app.get("/test", (req, res) => {
-  res.status(200).json({
-    message: "Server is running",
-    timestamp: new Date().toISOString(),
-    verify_token: process.env.VERIFY_TOKEN ? "SET" : "NOT SET",
-  });
-});
-
 // Configura CORS
 app.use(
   cors({
