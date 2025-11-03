@@ -113,7 +113,7 @@ class EmailService {
           console.log(`Email privata inviata con successo a ${email}`);
         } catch (error) {
           console.error(
-            `Errore nell'invio dell'email privata a ${email}:`,
+            `Errore nell'invio dell'email privata a ${contact.CustomerEmail}:`,
             error
           );
         }
@@ -215,7 +215,9 @@ class EmailService {
             `UPDATE public."Company" SET "CampaignToken" = $1 WHERE "CompanyEmail" = $2;`,
             [token, email]
           );
-          console.log(`Email aziendale inviata con successo a ${email}`);
+          console.log(
+            `Email aziendale inviata con successo a ${company.CompanyEmail}`
+          );
         } catch (error) {
           console.error(
             `Errore nell'invio dell'email aziendale a ${email}:`,
@@ -323,7 +325,7 @@ class EmailService {
           console.log(`Email privata inviata con successo a ${email}`);
         } catch (error) {
           console.error(
-            `Errore nell'invio dell'email privata a ${email}:`,
+            `Errore nell'invio dell'email privata a ${contact.CustomerEmail}:`,
             error
           );
         }
@@ -428,7 +430,7 @@ class EmailService {
           console.log(`Email aziendale inviata con successo a ${email}`);
         } catch (error) {
           console.error(
-            `Errore nell'invio dell'email aziendale a ${email}:`,
+            `Errore nell'invio dell'email aziendale a ${company.CompanyEmail}:`,
             error
           );
         }
