@@ -28,6 +28,41 @@ www.climawell.net
 `.trim();
 }
 
+function getImageMimeType(imagePath) {
+  const ext = path.extname(imagePath).toLowerCase();
+  const mimeTypes = {
+    ".jpg": "image/jpeg",
+    ".jpeg": "image/jpeg",
+    ".png": "image/png",
+    ".gif": "image/gif",
+    ".webp": "image/webp",
+  };
+  return mimeTypes[ext] || "image/jpeg";
+}
+
+function getImageUrl(imagePath) {
+  try {
+    if (!imagePath) {
+      console.warn("imagePath non fornito, utilizzo placeholder");
+      return "";
+    }
+
+    // Estrai il nome del file dal path
+    const fileName = path.basename(imagePath);
+
+    // Costruisci l'URL completo
+    const imageUrl = `https://api.climawell.net/public/uploads/CampaignImages/${fileName}`;
+
+    return imageUrl;
+  } catch (error) {
+    console.error(
+      `Errore nel costruire l'URL dell'immagine ${imagePath}:`,
+      error
+    );
+    return "";
+  }
+}
+
 class EmailService {
   static async startPrivateCampaign(
     description,
@@ -52,7 +87,7 @@ class EmailService {
         "EmailTemplate/PrivateCampaign.html"
       );
       const emailTemplate = fs.readFileSync(emailTemplatePath, "utf-8");
-      const imageId = `image-${Date.now()}`;
+      const imageUrl = getImageUrl(imagePath);
 
       const sendEmail = async (contact) => {
         if (!contact.CustomerEmail) {
@@ -83,11 +118,22 @@ class EmailService {
             link: unsubscribeUrl,
           });
 
-          const htmlContent = emailTemplate
+          let htmlContent = emailTemplate
             .replace(/\${name}/g, name)
             .replace(/\${description}/g, description)
-            .replace(/\${link}/g, unsubscribeUrl)
-            .replace(/\${image}/g, `cid:${imageId}`);
+            .replace(/\${link}/g, unsubscribeUrl);
+
+          // Gestisci l'immagine
+          if (imageUrl) {
+            // Sostituisci ${image} con l'URL dell'immagine
+            htmlContent = htmlContent.replace(/\${image}/g, imageUrl);
+          } else {
+            // Se l'immagine non è disponibile, rimuovi il div che contiene l'immagine
+            htmlContent = htmlContent.replace(
+              /<div\s+style="text-align:\s*center;\s*margin:\s*40px\s+0">[\s\S]*?<\/div>/g,
+              ""
+            );
+          }
 
           const emailOptions = {
             from: "marketing@climawell.net",
@@ -95,15 +141,9 @@ class EmailService {
             subject: title,
             text: textContent,
             html: htmlContent,
-            attachments: [
-              {
-                filename: path.basename(imagePath),
-                content: fs.readFileSync(imagePath).toString("base64"),
-                type: "image/jpeg",
-                disposition: "attachment",
-              },
-            ],
           };
+
+          console.log("imageUrl", imageUrl);
 
           await sgMail.send(emailOptions);
           await db.query(
@@ -157,7 +197,7 @@ class EmailService {
         "EmailTemplate/CompanyCampaign.html"
       );
       const emailTemplate = fs.readFileSync(emailTemplatePath, "utf-8");
-      const imageId = `image-${Date.now()}`;
+      const imageUrl = getImageUrl(imagePath);
 
       const sendEmail = async (company) => {
         if (!company.CompanyEmail) {
@@ -188,11 +228,22 @@ class EmailService {
             link: unsubscribeUrl,
           });
 
-          const htmlContent = emailTemplate
+          let htmlContent = emailTemplate
             .replace(/\${name}/g, name)
             .replace(/\${description}/g, description)
-            .replace(/\${link}/g, unsubscribeUrl)
-            .replace(/\${image}/g, `cid:${imageId}`);
+            .replace(/\${link}/g, unsubscribeUrl);
+
+          // Gestisci l'immagine
+          if (imageUrl) {
+            // Sostituisci ${image} con l'URL dell'immagine
+            htmlContent = htmlContent.replace(/\${image}/g, imageUrl);
+          } else {
+            // Se l'immagine non è disponibile, rimuovi il div che contiene l'immagine
+            htmlContent = htmlContent.replace(
+              /<div\s+style="text-align:\s*center;\s*margin:\s*40px\s+0">[\s\S]*?<\/div>/g,
+              ""
+            );
+          }
 
           const emailOptions = {
             from: "marketing@climawell.net",
@@ -200,14 +251,6 @@ class EmailService {
             subject: title,
             text: textContent,
             html: htmlContent,
-            attachments: [
-              {
-                filename: path.basename(imagePath),
-                content: fs.readFileSync(imagePath).toString("base64"),
-                type: "image/jpeg",
-                disposition: "attachment",
-              },
-            ],
           };
 
           await sgMail.send(emailOptions);
@@ -264,7 +307,7 @@ class EmailService {
         "EmailTemplate/PrivateCampaign.html"
       );
       const emailTemplate = fs.readFileSync(emailTemplatePath, "utf-8");
-      const imageId = `image-${Date.now()}`;
+      const imageUrl = getImageUrl(imagePath);
 
       const sendEmail = async (contact) => {
         if (!contact.CustomerEmail) {
@@ -295,11 +338,22 @@ class EmailService {
             link: unsubscribeUrl,
           });
 
-          const htmlContent = emailTemplate
+          let htmlContent = emailTemplate
             .replace(/\${name}/g, name)
             .replace(/\${description}/g, description)
-            .replace(/\${link}/g, unsubscribeUrl)
-            .replace(/\${image}/g, `cid:${imageId}`);
+            .replace(/\${link}/g, unsubscribeUrl);
+
+          // Gestisci l'immagine
+          if (imageUrl) {
+            // Sostituisci ${image} con l'URL dell'immagine
+            htmlContent = htmlContent.replace(/\${image}/g, imageUrl);
+          } else {
+            // Se l'immagine non è disponibile, rimuovi il div che contiene l'immagine
+            htmlContent = htmlContent.replace(
+              /<div\s+style="text-align:\s*center;\s*margin:\s*40px\s+0">[\s\S]*?<\/div>/g,
+              ""
+            );
+          }
 
           const emailOptions = {
             from: "marketing@climawell.net",
@@ -307,15 +361,9 @@ class EmailService {
             subject: title,
             text: textContent,
             html: htmlContent,
-            attachments: [
-              {
-                filename: path.basename(imagePath),
-                content: fs.readFileSync(imagePath).toString("base64"),
-                type: "image/jpeg",
-                disposition: "attachment",
-              },
-            ],
           };
+
+          console.log("htmlContent", htmlContent);
 
           await sgMail.send(emailOptions);
           await db.query(
@@ -369,7 +417,7 @@ class EmailService {
         "EmailTemplate/CompanyCampaign.html"
       );
       const emailTemplate = fs.readFileSync(emailTemplatePath, "utf-8");
-      const imageId = `image-${Date.now()}`;
+      const imageUrl = getImageUrl(imagePath);
 
       const sendEmail = async (company) => {
         if (!company.CompanyEmail) {
@@ -400,11 +448,22 @@ class EmailService {
             link: unsubscribeUrl,
           });
 
-          const htmlContent = emailTemplate
+          let htmlContent = emailTemplate
             .replace(/\${name}/g, name)
             .replace(/\${description}/g, description)
-            .replace(/\${link}/g, unsubscribeUrl)
-            .replace(/\${image}/g, `cid:${imageId}`);
+            .replace(/\${link}/g, unsubscribeUrl);
+
+          // Gestisci l'immagine
+          if (imageUrl) {
+            // Sostituisci ${image} con l'URL dell'immagine
+            htmlContent = htmlContent.replace(/\${image}/g, imageUrl);
+          } else {
+            // Se l'immagine non è disponibile, rimuovi il div che contiene l'immagine
+            htmlContent = htmlContent.replace(
+              /<div\s+style="text-align:\s*center;\s*margin:\s*40px\s+0">[\s\S]*?<\/div>/g,
+              ""
+            );
+          }
 
           const emailOptions = {
             from: "marketing@climawell.net",
@@ -412,14 +471,6 @@ class EmailService {
             subject: title,
             text: textContent,
             html: htmlContent,
-            attachments: [
-              {
-                filename: path.basename(imagePath),
-                content: fs.readFileSync(imagePath).toString("base64"),
-                type: "image/jpeg",
-                disposition: "attachment",
-              },
-            ],
           };
 
           await sgMail.send(emailOptions);
