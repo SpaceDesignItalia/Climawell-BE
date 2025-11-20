@@ -4,10 +4,126 @@ require("dotenv").config();
 const fs = require("fs");
 const FormData = require("form-data");
 const TurndownService = require("turndown");
+const path = require("path");
 
 // Inizializza Turndown con le opzioni di default
 const turndownService = new TurndownService();
 const batchSize = 1000;
+
+// Percorso del file di log
+const logFilePath = path.join(__dirname, "whatsapp_messages_log.json");
+
+/**
+ * Verifica se l'orario corrente è tra le 20:00 e le 9:00 (orario vietato)
+ * @returns {boolean} true se siamo nell'orario vietato
+ */
+function isForbiddenTime() {
+  const now = new Date();
+  const hour = now.getHours();
+  return hour >= 20 || hour < 9;
+}
+
+/**
+ * Calcola il prossimo orario valido (dopo le 9:00)
+ * @returns {Date} Data del prossimo orario valido
+ */
+function getNextValidTime() {
+  const now = new Date();
+  const nextValid = new Date(now);
+
+  if (now.getHours() >= 20) {
+    // Se siamo dopo le 20:00, imposta per le 9:00 del giorno successivo
+    nextValid.setDate(nextValid.getDate() + 1);
+    nextValid.setHours(9, 0, 0, 0);
+  } else if (now.getHours() < 9) {
+    // Se siamo prima delle 9:00, imposta per le 9:00 di oggi
+    nextValid.setHours(9, 0, 0, 0);
+  } else {
+    // Siamo già in orario valido
+    return now;
+  }
+
+  return nextValid;
+}
+
+/**
+ * Aspetta fino al prossimo orario valido se necessario
+ */
+async function waitForValidTime() {
+  if (isForbiddenTime()) {
+    const nextValid = getNextValidTime();
+    const waitTime = nextValid.getTime() - Date.now();
+    console.log(
+      `Orario vietato (20:00-9:00). Posticipo l'invio alle ${nextValid.toLocaleString(
+        "it-IT"
+      )}.`
+    );
+    await new Promise((resolve) => setTimeout(resolve, waitTime));
+  }
+}
+
+/**
+ * Calcola il tempo di attesa per avere 24 ore esatte tra il primo messaggio di un batch
+ * e il primo messaggio del batch successivo
+ * @param {Date} firstMessageTime - Data/ora del primo messaggio del batch corrente
+ * @returns {number} Tempo di attesa in millisecondi
+ */
+function calculateWaitTime(firstMessageTime) {
+  const now = new Date();
+  let targetTime = new Date(firstMessageTime.getTime() + 24 * 60 * 60 * 1000);
+
+  // Se l'orario target è nell'orario vietato (20:00-9:00), spostalo alle 9:00
+  if (targetTime.getHours() >= 20 || targetTime.getHours() < 9) {
+    // Crea una nuova data per le 9:00 del giorno dell'orario target
+    const nextValid = new Date(targetTime);
+    nextValid.setHours(9, 0, 0, 0);
+
+    // Se le 9:00 del giorno target sono già passate, passa al giorno successivo
+    if (nextValid <= now) {
+      nextValid.setDate(nextValid.getDate() + 1);
+    }
+
+    targetTime = nextValid;
+  }
+
+  const waitTime = targetTime.getTime() - now.getTime();
+  return Math.max(0, waitTime);
+}
+
+/**
+ * Logga un messaggio inviato su file JSON
+ * @param {string} recipient - Nome del destinatario
+ * @param {string} phoneNumber - Numero di telefono
+ * @param {Date} sendTime - Data/ora di invio
+ */
+function logMessage(recipient, phoneNumber, sendTime) {
+  try {
+    let logs = [];
+
+    // Leggi i log esistenti se il file esiste
+    if (fs.existsSync(logFilePath)) {
+      const fileContent = fs.readFileSync(logFilePath, "utf8");
+      if (fileContent.trim()) {
+        logs = JSON.parse(fileContent);
+      }
+    }
+
+    // Aggiungi il nuovo log
+    logs.push({
+      recipient: recipient,
+      phoneNumber: phoneNumber,
+      sendTime: sendTime.toISOString(),
+      sendTimeLocal: sendTime.toLocaleString("it-IT", {
+        timeZone: "Europe/Rome",
+      }),
+    });
+
+    // Scrivi i log aggiornati
+    fs.writeFileSync(logFilePath, JSON.stringify(logs, null, 2), "utf8");
+  } catch (error) {
+    console.error("Errore nel logging del messaggio:", error);
+  }
+}
 
 // Aggiungi regole personalizzate per il formato WhatsApp
 turndownService.addRule("whatsAppBold", {
@@ -88,6 +204,7 @@ class Messages {
       );
 
       let batchNumber = 0;
+      let previousBatchFirstMessageTime = null;
 
       // Dividi i contatti in batch
       while (batchNumber * batchSize < contacts.length) {
@@ -102,7 +219,7 @@ class Messages {
         );
 
         // Invia messaggi per il batch corrente
-        await this.sendBatchPrivateMessages(
+        const firstMessageTime = await this.sendBatchPrivateMessages(
           currentBatch,
           title,
           description,
@@ -111,12 +228,22 @@ class Messages {
 
         batchNumber++;
 
-        // Se ci sono altri batch, aspetta 26 ore
-        if (batchNumber * batchSize < contacts.length) {
-          console.log("Aspetto 26 ore prima del prossimo batch.");
-          await new Promise((resolve) =>
-            setTimeout(resolve, 26 * 60 * 60 * 1000)
+        // Se ci sono altri batch, calcola il tempo di attesa
+        if (batchNumber * batchSize < contacts.length && firstMessageTime) {
+          const waitTime = calculateWaitTime(firstMessageTime);
+          const nextSendTime = new Date(Date.now() + waitTime);
+
+          console.log(
+            `Aspetto ${(waitTime / (60 * 60 * 1000)).toFixed(
+              2
+            )} ore (24h dal primo messaggio del batch corrente). Prossimo invio previsto alle ${nextSendTime.toLocaleString(
+              "it-IT"
+            )}.`
           );
+
+          await new Promise((resolve) => setTimeout(resolve, waitTime));
+
+          previousBatchFirstMessageTime = firstMessageTime;
         }
       }
 
@@ -140,17 +267,34 @@ class Messages {
 
   /**
    * Invio effettivo (batch) dei messaggi privati (non premium) con immagine e testo.
+   * @returns {Date|null} Data/ora del primo messaggio inviato, null se nessun messaggio inviato
    */
   static async sendBatchPrivateMessages(contacts, title, description, imageId) {
     // Convertiamo la description (eventuale HTML) nel formato WhatsApp
     const safeDescription = convertHtmlToWhatsApp(description);
+    let firstMessageTime = null;
+
+    // Aspetta se siamo in orario vietato
+    await waitForValidTime();
 
     for (const contact of contacts) {
       const name = contact.CustomerFullName;
       const phoneNumber = contact.CustomerPhone;
       if (!phoneNumber) continue;
 
+      // Se siamo in orario vietato durante l'invio, aspetta
+      if (isForbiddenTime()) {
+        await waitForValidTime();
+      }
+
       try {
+        const sendTime = new Date();
+
+        // Traccia il primo messaggio inviato
+        if (firstMessageTime === null) {
+          firstMessageTime = sendTime;
+        }
+
         const response = await axios({
           url: "https://graph.facebook.com/v21.0/544175122111846/messages",
           method: "post",
@@ -201,8 +345,13 @@ class Messages {
           }),
         });
 
+        // Logga il messaggio inviato
+        logMessage(name, phoneNumber, sendTime);
+
         console.log(
-          `Messaggio inviato a ${name} (${phoneNumber}):`,
+          `Messaggio inviato a ${name} (${phoneNumber}) alle ${sendTime.toLocaleString(
+            "it-IT"
+          )}:`,
           response.data
         );
       } catch (error) {
@@ -212,6 +361,8 @@ class Messages {
         );
       }
     }
+
+    return firstMessageTime;
   }
 
   /**
@@ -252,18 +403,26 @@ class Messages {
             end > contacts.length ? contacts.length : end
           }.`
         );
-        await this.sendCompanyBatchMessages(
+        const firstMessageTime = await this.sendCompanyBatchMessages(
           currentBatch,
           title,
           description,
           imageId
         );
         batchNumber++;
-        if (batchNumber * batchSize < contacts.length) {
-          console.log("Aspetto 26 ore prima del prossimo batch.");
-          await new Promise((resolve) =>
-            setTimeout(resolve, 26 * 60 * 60 * 1000)
+        if (batchNumber * batchSize < contacts.length && firstMessageTime) {
+          const waitTime = calculateWaitTime(firstMessageTime);
+          const nextSendTime = new Date(Date.now() + waitTime);
+
+          console.log(
+            `Aspetto ${(waitTime / (60 * 60 * 1000)).toFixed(
+              2
+            )} ore (24h dal primo messaggio del batch corrente). Prossimo invio previsto alle ${nextSendTime.toLocaleString(
+              "it-IT"
+            )}.`
           );
+
+          await new Promise((resolve) => setTimeout(resolve, waitTime));
         }
       }
       await db.query(
@@ -283,16 +442,33 @@ class Messages {
 
   /**
    * Invio effettivo (batch) dei messaggi alle aziende (non premium) con immagine e testo.
+   * @returns {Date|null} Data/ora del primo messaggio inviato, null se nessun messaggio inviato
    */
   static async sendCompanyBatchMessages(contacts, title, description, imageId) {
     const safeDescription = convertHtmlToWhatsApp(description);
+    let firstMessageTime = null;
+
+    // Aspetta se siamo in orario vietato
+    await waitForValidTime();
 
     for (const contact of contacts) {
       const name = contact.CompanyName;
       const phoneNumber = contact.CompanyPhone;
       if (!phoneNumber) continue;
 
+      // Se siamo in orario vietato durante l'invio, aspetta
+      if (isForbiddenTime()) {
+        await waitForValidTime();
+      }
+
       try {
+        const sendTime = new Date();
+
+        // Traccia il primo messaggio inviato
+        if (firstMessageTime === null) {
+          firstMessageTime = sendTime;
+        }
+
         const response = await axios({
           url: "https://graph.facebook.com/v21.0/544175122111846/messages",
           method: "post",
@@ -343,8 +519,13 @@ class Messages {
           }),
         });
 
+        // Logga il messaggio inviato
+        logMessage(name, phoneNumber, sendTime);
+
         console.log(
-          `Messaggio inviato a ${name} (${phoneNumber}):`,
+          `Messaggio inviato a ${name} (${phoneNumber}) alle ${sendTime.toLocaleString(
+            "it-IT"
+          )}:`,
           response.data
         );
       } catch (error) {
@@ -354,6 +535,8 @@ class Messages {
         );
       }
     }
+
+    return firstMessageTime;
   }
 
   /**
@@ -394,18 +577,26 @@ class Messages {
             end > contacts.length ? contacts.length : end
           }.`
         );
-        await this.sendPrivatePremiumBatchMessages(
+        const firstMessageTime = await this.sendPrivatePremiumBatchMessages(
           currentBatch,
           title,
           description,
           imageId
         );
         batchNumber++;
-        if (batchNumber * batchSize < contacts.length) {
-          console.log("Aspetto 26 ore prima del prossimo batch.");
-          await new Promise((resolve) =>
-            setTimeout(resolve, 26 * 60 * 60 * 1000)
+        if (batchNumber * batchSize < contacts.length && firstMessageTime) {
+          const waitTime = calculateWaitTime(firstMessageTime);
+          const nextSendTime = new Date(Date.now() + waitTime);
+
+          console.log(
+            `Aspetto ${(waitTime / (60 * 60 * 1000)).toFixed(
+              2
+            )} ore (24h dal primo messaggio del batch corrente). Prossimo invio previsto alle ${nextSendTime.toLocaleString(
+              "it-IT"
+            )}.`
           );
+
+          await new Promise((resolve) => setTimeout(resolve, waitTime));
         }
       }
       await db.query(
@@ -425,6 +616,7 @@ class Messages {
 
   /**
    * Invio effettivo (batch) dei messaggi privati premium con immagine e testo.
+   * @returns {Date|null} Data/ora del primo messaggio inviato, null se nessun messaggio inviato
    */
   static async sendPrivatePremiumBatchMessages(
     contacts,
@@ -433,13 +625,29 @@ class Messages {
     imageId
   ) {
     const safeDescription = convertHtmlToWhatsApp(description);
+    let firstMessageTime = null;
+
+    // Aspetta se siamo in orario vietato
+    await waitForValidTime();
 
     for (const contact of contacts) {
       const name = contact.CustomerFullName;
       const phoneNumber = contact.CustomerPhone;
       if (!phoneNumber) continue;
 
+      // Se siamo in orario vietato durante l'invio, aspetta
+      if (isForbiddenTime()) {
+        await waitForValidTime();
+      }
+
       try {
+        const sendTime = new Date();
+
+        // Traccia il primo messaggio inviato
+        if (firstMessageTime === null) {
+          firstMessageTime = sendTime;
+        }
+
         const response = await axios({
           url: "https://graph.facebook.com/v21.0/544175122111846/messages",
           method: "post",
@@ -490,8 +698,13 @@ class Messages {
           }),
         });
 
+        // Logga il messaggio inviato
+        logMessage(name, phoneNumber, sendTime);
+
         console.log(
-          `Messaggio inviato a ${name} (${phoneNumber}):`,
+          `Messaggio inviato a ${name} (${phoneNumber}) alle ${sendTime.toLocaleString(
+            "it-IT"
+          )}:`,
           response.data
         );
       } catch (error) {
@@ -501,6 +714,8 @@ class Messages {
         );
       }
     }
+
+    return firstMessageTime;
   }
 
   /**
@@ -541,18 +756,26 @@ class Messages {
             end > contacts.length ? contacts.length : end
           }.`
         );
-        await this.sendCompanyPremiumBatchMessages(
+        const firstMessageTime = await this.sendCompanyPremiumBatchMessages(
           currentBatch,
           title,
           description,
           imageId
         );
         batchNumber++;
-        if (batchNumber * batchSize < contacts.length) {
-          console.log("Aspetto 26 ore prima del prossimo batch.");
-          await new Promise((resolve) =>
-            setTimeout(resolve, 26 * 60 * 60 * 1000)
+        if (batchNumber * batchSize < contacts.length && firstMessageTime) {
+          const waitTime = calculateWaitTime(firstMessageTime);
+          const nextSendTime = new Date(Date.now() + waitTime);
+
+          console.log(
+            `Aspetto ${(waitTime / (60 * 60 * 1000)).toFixed(
+              2
+            )} ore (24h dal primo messaggio del batch corrente). Prossimo invio previsto alle ${nextSendTime.toLocaleString(
+              "it-IT"
+            )}.`
           );
+
+          await new Promise((resolve) => setTimeout(resolve, waitTime));
         }
       }
       await db.query(
@@ -572,6 +795,7 @@ class Messages {
 
   /**
    * Invio effettivo (batch) dei messaggi premium alle aziende con immagine e testo.
+   * @returns {Date|null} Data/ora del primo messaggio inviato, null se nessun messaggio inviato
    */
   static async sendCompanyPremiumBatchMessages(
     contacts,
@@ -580,13 +804,29 @@ class Messages {
     imageId
   ) {
     const safeDescription = convertHtmlToWhatsApp(description);
+    let firstMessageTime = null;
+
+    // Aspetta se siamo in orario vietato
+    await waitForValidTime();
 
     for (const contact of contacts) {
       const name = contact.CompanyName;
       const phoneNumber = contact.CompanyPhone;
       if (!phoneNumber) continue;
 
+      // Se siamo in orario vietato durante l'invio, aspetta
+      if (isForbiddenTime()) {
+        await waitForValidTime();
+      }
+
       try {
+        const sendTime = new Date();
+
+        // Traccia il primo messaggio inviato
+        if (firstMessageTime === null) {
+          firstMessageTime = sendTime;
+        }
+
         const response = await axios({
           url: "https://graph.facebook.com/v21.0/544175122111846/messages",
           method: "post",
@@ -637,8 +877,13 @@ class Messages {
           }),
         });
 
+        // Logga il messaggio inviato
+        logMessage(name, phoneNumber, sendTime);
+
         console.log(
-          `Messaggio inviato a ${name} (${phoneNumber}):`,
+          `Messaggio inviato a ${name} (${phoneNumber}) alle ${sendTime.toLocaleString(
+            "it-IT"
+          )}:`,
           response.data
         );
       } catch (error) {
@@ -648,6 +893,8 @@ class Messages {
         );
       }
     }
+
+    return firstMessageTime;
   }
 
   /**
@@ -696,9 +943,16 @@ class Messages {
       ContactType == "private"
         ? ContactData.CustomerPhone
         : ContactData.CompanyPhone;
-    if (!phoneNumber) return;
+    if (!phoneNumber) return null;
+
+    // Aspetta se siamo in orario vietato
+    if (isForbiddenTime()) {
+      await waitForValidTime();
+    }
 
     try {
+      const sendTime = new Date();
+
       const response = await axios({
         url: "https://graph.facebook.com/v21.0/544175122111846/messages",
         method: "post",
@@ -720,15 +974,23 @@ class Messages {
         }),
       });
 
+      // Logga il messaggio inviato
+      logMessage(name, phoneNumber, sendTime);
+
       console.log(
-        `Messaggio inviato a ${name} (${phoneNumber}):`,
+        `Messaggio inviato a ${name} (${phoneNumber}) alle ${sendTime.toLocaleString(
+          "it-IT"
+        )}:`,
         response.data
       );
+
+      return sendTime;
     } catch (error) {
       console.error(
         `Errore nell'invio del messaggio a ${name} (${"+39" + phoneNumber}):`,
         error.response?.data || error.message
       );
+      return null;
     }
   }
 
@@ -759,18 +1021,34 @@ class Messages {
           }.`
         );
 
+        let firstMessageTime = null;
         for (const contact of currentBatch) {
-          await this.sendStartMessage(db, contact.data, contact.type);
+          const sendTime = await this.sendStartMessage(
+            db,
+            contact.data,
+            contact.type
+          );
+          if (sendTime && firstMessageTime === null) {
+            firstMessageTime = sendTime;
+          }
         }
 
         batchNumber++;
 
-        // Se ci sono altri batch, aspetta 26 ore
-        if (batchNumber * batchSize < allContacts.length) {
-          console.log("Aspetto 26 ore prima del prossimo batch.");
-          await new Promise((resolve) =>
-            setTimeout(resolve, 26 * 60 * 60 * 1000)
+        // Se ci sono altri batch, calcola il tempo di attesa
+        if (batchNumber * batchSize < allContacts.length && firstMessageTime) {
+          const waitTime = calculateWaitTime(firstMessageTime);
+          const nextSendTime = new Date(Date.now() + waitTime);
+
+          console.log(
+            `Aspetto ${(waitTime / (60 * 60 * 1000)).toFixed(
+              2
+            )} ore (24h dal primo messaggio del batch corrente). Prossimo invio previsto alle ${nextSendTime.toLocaleString(
+              "it-IT"
+            )}.`
           );
+
+          await new Promise((resolve) => setTimeout(resolve, waitTime));
         }
       }
 

@@ -141,15 +141,9 @@ class EmailService {
             subject: title,
             text: textContent,
             html: htmlContent,
-            attachments: [
-              {
-                content: fs.readFileSync(imagePath).toString("base64"),
-                filename: path.basename(imagePath),
-                type: getImageMimeType(imagePath),
-                disposition: "attachment",
-              },
-            ],
           };
+
+          console.log("imageUrl", imageUrl);
 
           await sgMail.send(emailOptions);
           await db.query(
@@ -257,14 +251,6 @@ class EmailService {
             subject: title,
             text: textContent,
             html: htmlContent,
-            attachments: [
-              {
-                content: fs.readFileSync(imagePath).toString("base64"),
-                filename: path.basename(imagePath),
-                type: getImageMimeType(imagePath),
-                disposition: "attachment",
-              },
-            ],
           };
 
           await sgMail.send(emailOptions);
@@ -375,15 +361,9 @@ class EmailService {
             subject: title,
             text: textContent,
             html: htmlContent,
-            attachments: [
-              {
-                content: fs.readFileSync(imagePath).toString("base64"),
-                filename: path.basename(imagePath),
-                type: getImageMimeType(imagePath),
-                disposition: "attachment",
-              },
-            ],
           };
+
+          console.log("htmlContent", htmlContent);
 
           await sgMail.send(emailOptions);
           await db.query(
@@ -491,14 +471,6 @@ class EmailService {
             subject: title,
             text: textContent,
             html: htmlContent,
-            attachments: [
-              {
-                content: fs.readFileSync(imagePath).toString("base64"),
-                filename: path.basename(imagePath),
-                type: getImageMimeType(imagePath),
-                disposition: "attachment",
-              },
-            ],
           };
 
           await sgMail.send(emailOptions);
