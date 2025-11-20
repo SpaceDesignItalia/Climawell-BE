@@ -1,22 +1,12 @@
-const nodemailer = require("nodemailer");
+const sgMail = require("@sendgrid/mail");
 const fs = require("fs");
 const path = require("path");
 const ContactModel = require("../../Models/ContactModel");
 
-const mailData = {
-  mail: "marketing@climawell.net",
-  pass: "@Gemellini04",
-};
-
-const transporter = nodemailer.createTransport({
-  host: "smtp.ionos.it",
-  port: 587,
-  secure: false,
-  auth: {
-    user: mailData.mail,
-    pass: mailData.pass,
-  },
-});
+// Configurazione SendGrid
+sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+//sgMail.setDataResidency("eu");
+// decommentare la riga sopra se si sta inviando mail usando un subuser regionale EU
 
 function generateTextVersion(params) {
   return `
@@ -38,6 +28,41 @@ www.climawell.net
 `.trim();
 }
 
+function getImageMimeType(imagePath) {
+  const ext = path.extname(imagePath).toLowerCase();
+  const mimeTypes = {
+    ".jpg": "image/jpeg",
+    ".jpeg": "image/jpeg",
+    ".png": "image/png",
+    ".gif": "image/gif",
+    ".webp": "image/webp",
+  };
+  return mimeTypes[ext] || "image/jpeg";
+}
+
+function getImageUrl(imagePath) {
+  try {
+    if (!imagePath) {
+      console.warn("imagePath non fornito, utilizzo placeholder");
+      return "";
+    }
+
+    // Estrai il nome del file dal path
+    const fileName = path.basename(imagePath);
+
+    // Costruisci l'URL completo
+    const imageUrl = `https://api.climawell.net/public/uploads/CampaignImages/${fileName}`;
+
+    return imageUrl;
+  } catch (error) {
+    console.error(
+      `Errore nel costruire l'URL dell'immagine ${imagePath}:`,
+      error
+    );
+    return "";
+  }
+}
+
 class EmailService {
   static async startPrivateCampaign(
     description,
@@ -55,8 +80,6 @@ class EmailService {
         db
       );
 
-      console.log(contacts);
-
       if (!contacts?.length) return;
 
       const emailTemplatePath = path.join(
@@ -64,7 +87,7 @@ class EmailService {
         "EmailTemplate/PrivateCampaign.html"
       );
       const emailTemplate = fs.readFileSync(emailTemplatePath, "utf-8");
-      const imageId = `image-${Date.now()}`;
+      const imageUrl = getImageUrl(imagePath);
 
       const sendEmail = async (contact) => {
         if (!contact.CustomerEmail) {
@@ -95,36 +118,34 @@ class EmailService {
             link: unsubscribeUrl,
           });
 
-          const htmlContent = emailTemplate
+          let htmlContent = emailTemplate
             .replace(/\${name}/g, name)
             .replace(/\${description}/g, description)
-            .replace(/\${link}/g, unsubscribeUrl)
-            .replace(/\${image}/g, `cid:${imageId}`);
+            .replace(/\${link}/g, unsubscribeUrl);
+
+          // Gestisci l'immagine
+          if (imageUrl) {
+            // Sostituisci ${image} con l'URL dell'immagine
+            htmlContent = htmlContent.replace(/\${image}/g, imageUrl);
+          } else {
+            // Se l'immagine non è disponibile, rimuovi il div che contiene l'immagine
+            htmlContent = htmlContent.replace(
+              /<div\s+style="text-align:\s*center;\s*margin:\s*40px\s+0">[\s\S]*?<\/div>/g,
+              ""
+            );
+          }
 
           const emailOptions = {
-            from: {
-              name: "Climawell SRL",
-              address: mailData.mail,
-            },
+            from: "marketing@climawell.net",
             to: email,
             subject: title,
             text: textContent,
             html: htmlContent,
-            attachments: [
-              {
-                filename: path.basename(imagePath),
-                path: imagePath,
-                cid: imageId,
-              },
-            ],
-            headers: {
-              "X-Entity-Ref-ID": `private-${Date.now()}-${token}`,
-              "List-Unsubscribe": `<${unsubscribeUrl}>`,
-              "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
-            },
           };
 
-          await transporter.sendMail(emailOptions);
+          console.log("imageUrl", imageUrl);
+
+          await sgMail.send(emailOptions);
           await db.query(
             `UPDATE public."Customer" SET "CampaignToken" = $1 WHERE "CustomerEmail" = $2;`,
             [token, email]
@@ -132,7 +153,7 @@ class EmailService {
           console.log(`Email privata inviata con successo a ${email}`);
         } catch (error) {
           console.error(
-            `Errore nell'invio dell'email privata a ${email}:`,
+            `Errore nell'invio dell'email privata a ${contact.CustomerEmail}:`,
             error
           );
         }
@@ -176,7 +197,7 @@ class EmailService {
         "EmailTemplate/CompanyCampaign.html"
       );
       const emailTemplate = fs.readFileSync(emailTemplatePath, "utf-8");
-      const imageId = `image-${Date.now()}`;
+      const imageUrl = getImageUrl(imagePath);
 
       const sendEmail = async (company) => {
         if (!company.CompanyEmail) {
@@ -207,41 +228,39 @@ class EmailService {
             link: unsubscribeUrl,
           });
 
-          const htmlContent = emailTemplate
+          let htmlContent = emailTemplate
             .replace(/\${name}/g, name)
             .replace(/\${description}/g, description)
-            .replace(/\${link}/g, unsubscribeUrl)
-            .replace(/\${image}/g, `cid:${imageId}`);
+            .replace(/\${link}/g, unsubscribeUrl);
+
+          // Gestisci l'immagine
+          if (imageUrl) {
+            // Sostituisci ${image} con l'URL dell'immagine
+            htmlContent = htmlContent.replace(/\${image}/g, imageUrl);
+          } else {
+            // Se l'immagine non è disponibile, rimuovi il div che contiene l'immagine
+            htmlContent = htmlContent.replace(
+              /<div\s+style="text-align:\s*center;\s*margin:\s*40px\s+0">[\s\S]*?<\/div>/g,
+              ""
+            );
+          }
 
           const emailOptions = {
-            from: {
-              name: "Climawell SRL",
-              address: mailData.mail,
-            },
+            from: "marketing@climawell.net",
             to: email,
             subject: title,
             text: textContent,
             html: htmlContent,
-            attachments: [
-              {
-                filename: path.basename(imagePath),
-                path: imagePath,
-                cid: imageId,
-              },
-            ],
-            headers: {
-              "X-Entity-Ref-ID": `company-${Date.now()}-${token}`,
-              "List-Unsubscribe": `<${unsubscribeUrl}>`,
-              "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
-            },
           };
 
-          await transporter.sendMail(emailOptions);
+          await sgMail.send(emailOptions);
           await db.query(
             `UPDATE public."Company" SET "CampaignToken" = $1 WHERE "CompanyEmail" = $2;`,
             [token, email]
           );
-          console.log(`Email aziendale inviata con successo a ${email}`);
+          console.log(
+            `Email aziendale inviata con successo a ${company.CompanyEmail}`
+          );
         } catch (error) {
           console.error(
             `Errore nell'invio dell'email aziendale a ${email}:`,
@@ -281,8 +300,6 @@ class EmailService {
         db
       );
 
-      console.log(contacts);
-
       if (!contacts?.length) return;
 
       const emailTemplatePath = path.join(
@@ -290,7 +307,7 @@ class EmailService {
         "EmailTemplate/PrivateCampaign.html"
       );
       const emailTemplate = fs.readFileSync(emailTemplatePath, "utf-8");
-      const imageId = `image-${Date.now()}`;
+      const imageUrl = getImageUrl(imagePath);
 
       const sendEmail = async (contact) => {
         if (!contact.CustomerEmail) {
@@ -321,36 +338,34 @@ class EmailService {
             link: unsubscribeUrl,
           });
 
-          const htmlContent = emailTemplate
+          let htmlContent = emailTemplate
             .replace(/\${name}/g, name)
             .replace(/\${description}/g, description)
-            .replace(/\${link}/g, unsubscribeUrl)
-            .replace(/\${image}/g, `cid:${imageId}`);
+            .replace(/\${link}/g, unsubscribeUrl);
+
+          // Gestisci l'immagine
+          if (imageUrl) {
+            // Sostituisci ${image} con l'URL dell'immagine
+            htmlContent = htmlContent.replace(/\${image}/g, imageUrl);
+          } else {
+            // Se l'immagine non è disponibile, rimuovi il div che contiene l'immagine
+            htmlContent = htmlContent.replace(
+              /<div\s+style="text-align:\s*center;\s*margin:\s*40px\s+0">[\s\S]*?<\/div>/g,
+              ""
+            );
+          }
 
           const emailOptions = {
-            from: {
-              name: "Climawell SRL",
-              address: mailData.mail,
-            },
+            from: "marketing@climawell.net",
             to: email,
             subject: title,
             text: textContent,
             html: htmlContent,
-            attachments: [
-              {
-                filename: path.basename(imagePath),
-                path: imagePath,
-                cid: imageId,
-              },
-            ],
-            headers: {
-              "X-Entity-Ref-ID": `private-${Date.now()}-${token}`,
-              "List-Unsubscribe": `<${unsubscribeUrl}>`,
-              "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
-            },
           };
 
-          await transporter.sendMail(emailOptions);
+          console.log("htmlContent", htmlContent);
+
+          await sgMail.send(emailOptions);
           await db.query(
             `UPDATE public."Customer" SET "CampaignToken" = $1 WHERE "CustomerEmail" = $2;`,
             [token, email]
@@ -358,7 +373,7 @@ class EmailService {
           console.log(`Email privata inviata con successo a ${email}`);
         } catch (error) {
           console.error(
-            `Errore nell'invio dell'email privata a ${email}:`,
+            `Errore nell'invio dell'email privata a ${contact.CustomerEmail}:`,
             error
           );
         }
@@ -402,7 +417,7 @@ class EmailService {
         "EmailTemplate/CompanyCampaign.html"
       );
       const emailTemplate = fs.readFileSync(emailTemplatePath, "utf-8");
-      const imageId = `image-${Date.now()}`;
+      const imageUrl = getImageUrl(imagePath);
 
       const sendEmail = async (company) => {
         if (!company.CompanyEmail) {
@@ -433,36 +448,32 @@ class EmailService {
             link: unsubscribeUrl,
           });
 
-          const htmlContent = emailTemplate
+          let htmlContent = emailTemplate
             .replace(/\${name}/g, name)
             .replace(/\${description}/g, description)
-            .replace(/\${link}/g, unsubscribeUrl)
-            .replace(/\${image}/g, `cid:${imageId}`);
+            .replace(/\${link}/g, unsubscribeUrl);
+
+          // Gestisci l'immagine
+          if (imageUrl) {
+            // Sostituisci ${image} con l'URL dell'immagine
+            htmlContent = htmlContent.replace(/\${image}/g, imageUrl);
+          } else {
+            // Se l'immagine non è disponibile, rimuovi il div che contiene l'immagine
+            htmlContent = htmlContent.replace(
+              /<div\s+style="text-align:\s*center;\s*margin:\s*40px\s+0">[\s\S]*?<\/div>/g,
+              ""
+            );
+          }
 
           const emailOptions = {
-            from: {
-              name: "Climawell SRL",
-              address: mailData.mail,
-            },
+            from: "marketing@climawell.net",
             to: email,
             subject: title,
             text: textContent,
             html: htmlContent,
-            attachments: [
-              {
-                filename: path.basename(imagePath),
-                path: imagePath,
-                cid: imageId,
-              },
-            ],
-            headers: {
-              "X-Entity-Ref-ID": `company-${Date.now()}-${token}`,
-              "List-Unsubscribe": `<${unsubscribeUrl}>`,
-              "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
-            },
           };
 
-          await transporter.sendMail(emailOptions);
+          await sgMail.send(emailOptions);
           await db.query(
             `UPDATE public."Company" SET "CampaignToken" = $1 WHERE "CompanyEmail" = $2;`,
             [token, email]
@@ -470,7 +481,7 @@ class EmailService {
           console.log(`Email aziendale inviata con successo a ${email}`);
         } catch (error) {
           console.error(
-            `Errore nell'invio dell'email aziendale a ${email}:`,
+            `Errore nell'invio dell'email aziendale a ${company.CompanyEmail}:`,
             error
           );
         }

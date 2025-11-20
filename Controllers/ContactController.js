@@ -1,11 +1,13 @@
 // controller/PermissionController.js
+const Messages = require("../middlewares/WhatsappBusiness/Messages");
 const ContactModel = require("../Models/ContactModel");
 
 class ContactController {
   static async GetAllPrivate(req, res, db) {
     try {
       const isPremium = req.query.isPremium;
-      const contacts = await ContactModel.GetAllPrivate(isPremium, db);
+      const Agente = req.session.account.Agente;
+      const contacts = await ContactModel.GetAllPrivate(isPremium, Agente, db);
       res.status(200).json(contacts);
     } catch (error) {
       console.error("Errore nell'recuperare i clienti:", error);
@@ -15,7 +17,8 @@ class ContactController {
   static async GetAllCompany(req, res, db) {
     try {
       const isPremium = req.query.isPremium;
-      const contacts = await ContactModel.GetAllCompany(isPremium, db);
+      const Agente = req.session.account.Agente;
+      const contacts = await ContactModel.GetAllCompany(isPremium, Agente, db);
       res.status(200).json(contacts);
     } catch (error) {
       console.error("Errore nell'recuperare i clienti:", error);
@@ -68,6 +71,13 @@ class ContactController {
         privacyFileName
       );
 
+      /*await Messages.sendStartMessage(
+        db,
+        JSON.parse(ContactData),
+        ContactType,
+        privacyFileName
+      );*/
+
       res.status(201).send("Cliente aggiunto con successo.");
     } catch (error) {
       console.error("Errore nell'aggiungere il cliente:", error);
@@ -90,6 +100,8 @@ class ContactController {
       const { companies, customers } = req.body;
 
       await ContactModel.UploadContacts(db, companies, customers);
+
+      /*await Messages.sendUploadMessage(db, companies, customers);*/
       res.status(201).send("Clienti aggiunti con successo.");
     } catch (error) {
       console.error("Errore nell'aggiungere i clienti:", error);
