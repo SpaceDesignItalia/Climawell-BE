@@ -7,7 +7,8 @@ class ContactModel {
        "CustomerPhone", 
        "PolicyAccepted", 
        "Agente", 
-       "Cap" 
+       "Cap",
+       "isBlocked"
         FROM public."Customer"
         WHERE ($1 = true AND "IsPremium" = true AND "Agente" = $2) OR ($1 = false)
         ORDER BY "CustomerId" ASC;
@@ -48,7 +49,8 @@ class ContactModel {
           "CustomerPhone", 
           "PolicyAccepted", 
           "Agente", 
-          "Cap" 
+          "Cap",
+          "isBlocked"
         FROM public."Customer"
         WHERE (($1 = true AND "IsPremium" = true) OR ($1 = false))
           AND ("CustomerEmail" ILIKE $2)
@@ -184,15 +186,17 @@ class ContactModel {
   static UploadContacts(db, companies, customers) {
     return new Promise((resolve, reject) => {
       // Query per eliminare ed inserire le aziende
-      const deleteCompanyQuery = `DELETE FROM public."Company" WHERE "CompanyName" = $1;`;
+      const blockedStatusCompanyQuery = `SELECT "isBlocked" FROM public."Company" WHERE "CompanyName" = $1;`;
+      const deleteCompanyQuery = `DELETE FROM public."Company" WHERE "CompanyName" = $1 AND "isBlocked" = $2;`;
       const insertCompanyQuery = `INSERT INTO public."Company"(
         "CompanyName", 
         "CompanyEmail", 
         "CompanyPhone", 
         "CompanyVAT",
         "Agente",
-        "Cap"
-      ) VALUES ($1, $2, $3, 'test', $4, $5);`;
+        "Cap",
+        "isBlocked"
+      ) VALUES ($1, $2, $3, 'test', $4, $5, $6);`;
 
       companies.forEach((company) => {
         const values = [
@@ -203,22 +207,42 @@ class ContactModel {
           company.Cap,
         ];
 
-        // Elimina prima la riga esistente con lo stesso CompanyName
-        db.query(deleteCompanyQuery, [company.CompanyName], (error, result) => {
-          if (error) {
-            return reject(error);
-          }
-
-          // Poi inserisci la nuova riga
-          db.query(insertCompanyQuery, values, (error, result) => {
+        db.query(
+          blockedStatusCompanyQuery,
+          [company.CompanyName],
+          (error, result) => {
             if (error) {
               return reject(error);
             }
-          });
-        });
+
+            if (result.rows[0]) {
+              values.push(result.rows[0].isBlocked ? true : false);
+            } else {
+              values.push(false);
+            }
+            // Elimina prima la riga esistente con lo stesso CompanyName
+            db.query(
+              deleteCompanyQuery,
+              [company.CompanyName],
+              (error, result) => {
+                if (error) {
+                  return reject(error);
+                }
+
+                // Poi inserisci la nuova riga
+                db.query(insertCompanyQuery, values, (error, result) => {
+                  if (error) {
+                    return reject(error);
+                  }
+                });
+              }
+            );
+          }
+        );
       });
 
       // Query per eliminare ed inserire i clienti
+      const blockedStatusCustomerQuery = `SELECT "isBlocked" FROM public."Customer" WHERE "CustomerName" = $1 AND "CustomerSurname" = $2;`;
       const deleteCustomerQuery = `DELETE FROM public."Customer" WHERE "CustomerName" = $1 AND "CustomerSurname" = $2;`;
       const insertCustomerQuery = `INSERT INTO public."Customer"(
         "CustomerName", 
@@ -228,8 +252,9 @@ class ContactModel {
         "PolicyAccepted", 
         "PolicyDocumentUrl",
         "Agente",
-        "Cap"
-      ) VALUES ($1, $2, $3, $4, true, 'test', $5, $6);`;
+        "Cap",
+        "isBlocked"
+      ) VALUES ($1, $2, $3, $4, true, 'test', $5, $6, $7);`;
 
       customers.forEach((customer) => {
         const values = [
@@ -241,21 +266,38 @@ class ContactModel {
           customer.Cap,
         ];
 
-        // Elimina prima la riga esistente con lo stesso CustomerName e CustomerSurname
         db.query(
-          deleteCustomerQuery,
+          blockedStatusCustomerQuery,
           [customer.CustomerName, customer.CustomerSurname],
           (error, result) => {
             if (error) {
               return reject(error);
             }
 
-            // Poi inserisci la nuova riga
-            db.query(insertCustomerQuery, values, (error, result) => {
-              if (error) {
-                return reject(error);
+            if (result.rows[0]) {
+              values.push(result.rows[0].isBlocked ? true : false);
+            } else {
+              values.push(false);
+            }
+            // Elimina prima la riga esistente con lo stesso CustomerName e CustomerSurname
+            db.query(
+              deleteCustomerQuery,
+              [customer.CustomerName, customer.CustomerSurname],
+              (error, result) => {
+                if (error) {
+                  return reject(error);
+                }
+
+                console.log(values);
+
+                // Poi inserisci la nuova riga
+                db.query(insertCustomerQuery, values, (error, result) => {
+                  if (error) {
+                    return reject(error);
+                  }
+                });
               }
-            });
+            );
           }
         );
       });
@@ -368,6 +410,7 @@ class ContactModel {
                       INNER JOIN public."Cap" ON "Customer"."Cap" = "Cap"."cap"
                       WHERE ("Cap" IN (${capValues}) OR "generalCap" IN (${capValues}))
                       AND "Agente" IN (${agenteValues})
+                      AND "isBlocked" = false
                       ORDER BY "CustomerId" ASC`;
         console.log(query);
         db.query(query, (error, result) => {
@@ -382,6 +425,7 @@ class ContactModel {
                       FROM public."Customer"
                       INNER JOIN public."Cap" ON "Customer"."Cap" = "Cap"."cap"
                       WHERE "Cap" IN (${capValues}) OR "generalCap" IN (${capValues})
+                      AND "isBlocked" = false
                       ORDER BY "CustomerId" ASC`;
         console.log(query);
         db.query(query, (error, result) => {
@@ -395,6 +439,7 @@ class ContactModel {
         query = `SELECT "CustomerId", CONCAT("CustomerName", ' ', "CustomerSurname") AS "CustomerFullName", "CustomerEmail", "CustomerPhone", "PolicyAccepted", "Agente", "Cap"
                       FROM public."Customer"
                       WHERE "Agente" IN (${agenteValues})
+                      AND "isBlocked" = false
                       ORDER BY "CustomerId" ASC`;
         db.query(query, (error, result) => {
           if (error) {
@@ -406,6 +451,7 @@ class ContactModel {
         // Se nessun parametro è fornito, restituisci tutti i record
         query = `SELECT "CustomerId", CONCAT("CustomerName", ' ', "CustomerSurname") AS "CustomerFullName", "CustomerEmail", "CustomerPhone", "PolicyAccepted", "Agente", "Cap"
                       FROM public."Customer"
+                      AND "isBlocked" = false
                       ORDER BY "CustomerId" ASC`;
         db.query(query, (error, result) => {
           if (error) {
@@ -457,6 +503,7 @@ class ContactModel {
                  WHERE ("Cap" IN (${capValues}) OR "generalCap" IN (${capValues}))
                  AND "Agente" IN (${agenteValues})
                  AND "IsPremium" = true
+                 AND "isBlocked" = false
                  ORDER BY "CustomerId" ASC`;
 
         db.query(query, (error, result) => {
@@ -473,6 +520,7 @@ class ContactModel {
                  INNER JOIN public."Cap" ON "Customer"."Cap" = "Cap"."cap"
                  WHERE ("Cap" IN (${capValues}) OR "generalCap" IN (${capValues}))
                  AND "IsPremium" = true
+                 AND "isBlocked" = false
                  ORDER BY "CustomerId" ASC`;
 
         db.query(query, (error, result) => {
@@ -488,6 +536,7 @@ class ContactModel {
                  FROM public."Customer"
                  WHERE "Agente" IN (${agenteValues})
                  AND "IsPremium" = true
+                 AND "isBlocked" = false
                  ORDER BY "CustomerId" ASC`;
 
         db.query(query, (error, result) => {
@@ -502,6 +551,7 @@ class ContactModel {
                         "CustomerEmail", "CustomerPhone", "PolicyAccepted", "Agente", "Cap" 
                  FROM public."Customer"
                  WHERE "IsPremium" = true
+                 AND "isBlocked" = false
                  ORDER BY "CustomerId" ASC`;
 
         db.query(query, (error, result) => {
@@ -551,6 +601,7 @@ class ContactModel {
                  INNER JOIN public."Cap" ON "Company"."Cap" = "Cap"."cap"
                  WHERE ("Cap" IN (${capValues}) OR "generalCap" IN (${capValues}))
                  AND "Agente" IN (${agenteValues})
+                 AND "isBlocked" = false
                  ORDER BY "CompanyId" ASC`;
 
         db.query(query, (error, result) => {
@@ -564,6 +615,7 @@ class ContactModel {
         query = `SELECT * FROM public."Company" 
                  INNER JOIN public."Cap" ON "Company"."Cap" = "Cap"."cap"
                  WHERE ("Cap" IN (${capValues}) OR "generalCap" IN (${capValues}))
+                 AND "isBlocked" = false
                  ORDER BY "CompanyId" ASC`;
 
         db.query(query, (error, result) => {
@@ -576,6 +628,7 @@ class ContactModel {
         // Se solo agenteList è fornita
         query = `SELECT * FROM public."Company" 
                  WHERE "Agente" IN (${agenteValues})
+                 AND "isBlocked" = false
                  ORDER BY "CompanyId" ASC`;
 
         db.query(query, (error, result) => {
@@ -587,6 +640,7 @@ class ContactModel {
       } else {
         // Se nessun parametro è fornito, restituisci tutti i record
         query = `SELECT * FROM public."Company" 
+                 AND "isBlocked" = false
                  ORDER BY "CompanyId" ASC`;
 
         db.query(query, (error, result) => {
@@ -637,6 +691,7 @@ class ContactModel {
                  WHERE ("Cap" IN (${capValues}) OR "generalCap" IN (${capValues}))
                  AND "Agente" IN (${agenteValues})
                  AND "IsPremium" = true
+                 AND "isBlocked" = false
                  ORDER BY "CompanyId" ASC`;
 
         db.query(query, (error, result) => {
@@ -651,6 +706,7 @@ class ContactModel {
                  INNER JOIN public."Cap" ON "Company"."Cap" = "Cap"."cap"
                  WHERE ("Cap" IN (${capValues}) OR "generalCap" IN (${capValues}))
                  AND "IsPremium" = true
+                 AND "isBlocked" = false
                  ORDER BY "CompanyId" ASC`;
 
         db.query(query, (error, result) => {
@@ -664,6 +720,7 @@ class ContactModel {
         query = `SELECT * FROM public."Company" 
                  WHERE "Agente" IN (${agenteValues})
                  AND "IsPremium" = true
+                 AND "isBlocked" = false
                  ORDER BY "CompanyId" ASC`;
 
         db.query(query, (error, result) => {
@@ -676,6 +733,7 @@ class ContactModel {
         // Se nessun parametro è fornito, restituisci tutti i record
         query = `SELECT * FROM public."Company" 
                  WHERE "IsPremium" = true
+                 AND "isBlocked" = false
                  ORDER BY "CompanyId" ASC`;
 
         db.query(query, (error, result) => {
@@ -698,8 +756,9 @@ class ContactModel {
         "CustomerEmail" = $3,
         "CustomerPhone" = $4, 
         "Cap" = $5,
-        "IsPremium" = $6
-        WHERE "CustomerId" = $7;`;
+        "IsPremium" = $6,
+        "isBlocked" = $7
+        WHERE "CustomerId" = $8;`;
         const values = [
           ContactData.CustomerName,
           ContactData.CustomerSurname,
@@ -707,6 +766,7 @@ class ContactModel {
           ContactData.CustomerPhone,
           ContactData.Cap,
           ContactData.IsPremium ? true : false,
+          ContactData.IsBlocked ? true : false,
           ContactData.CustomerId,
         ];
 
@@ -723,14 +783,16 @@ class ContactModel {
         "CompanyEmail" = $2, 
         "CompanyPhone" = $3, 
         "Cap" = $4,
-        "IsPremium" = $5
-        WHERE "CompanyId" = $6;`;
+        "IsPremium" = $5,
+        "isBlocked" = $6
+        WHERE "CompanyId" = $7;`;
         const values = [
           ContactData.CompanyName,
           ContactData.CompanyEmail,
           ContactData.CompanyPhone,
           ContactData.Cap,
           ContactData.IsPremium ? true : false,
+          ContactData.IsBlocked ? true : false,
           ContactData.CompanyId,
         ];
 
